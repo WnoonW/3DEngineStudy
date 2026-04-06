@@ -1,7 +1,6 @@
 #pragma once
 #include "ECS.h"
 
-// 상수 버퍼 구조체 (기존 Object.h 에 있던 것)
 struct ObjectConstants {
     DirectX::XMFLOAT4X4 WorldViewProj = {};
     uint32_t isSelected = 0;
@@ -9,13 +8,11 @@ struct ObjectConstants {
 
 class TransformSystem {
 public:
-    // Transform 값을 바탕으로 World Matrix를 갱신
     static void Update(Registry& registry) {
         auto& transforms = registry.GetComponentMap<TransformComponent>();
 
         for (auto& [entity, transform] : transforms) {
             DirectX::XMVECTOR scale = DirectX::XMLoadFloat3(&transform.scale);
-            // 필요에 따라 회전(Rotation) 쿼터니언 변환 추가 가능
             DirectX::XMVECTOR rot = DirectX::XMQuaternionIdentity();
             DirectX::XMVECTOR pos = DirectX::XMLoadFloat3(&transform.position);
 
@@ -27,18 +24,27 @@ public:
 
 class RenderSystem {
 public:
-    // 카메라 정보(View, Proj)를 받아 상수 버퍼를 업데이트
-    static void UpdateConstants(Registry& registry, DirectX::XMMATRIX view, DirectX::XMMATRIX proj) {
+    // [수정] 매개변수에 화면 가로(screenWidth), 세로(screenHeight) 추가
+    static void UpdateConstants(Registry& registry, DirectX::XMMATRIX view, DirectX::XMMATRIX proj, float screenWidth, float screenHeight) {
         auto& transforms = registry.GetComponentMap<TransformComponent>();
         auto& renders = registry.GetComponentMap<RenderComponent>();
 
         for (auto& [entity, render] : renders) {
-            // Transform이 없는 렌더 객체는 무시하거나 예외 처리
             if (transforms.find(entity) != transforms.end()) {
                 auto& transform = transforms[entity];
 
                 DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&transform.worldMatrix);
-                DirectX::XMMATRIX worldViewProj = render.isUI ? (world * proj) : (world * view * proj);
+                DirectX::XMMATRIX worldViewProj;
+
+                if (render.isUI) {
+                    // [중요] 화면 픽셀 좌표계를 NDC(-1 ~ 1)로 변환하는 직교 투영 행렬 생성
+                    DirectX::XMMATRIX ortho = DirectX::XMMatrixOrthographicOffCenterLH(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
+                    // World(위치/크기) * Ortho(화면 비율 매핑)
+                    worldViewProj = world * ortho;
+                }
+                else {
+                    worldViewProj = world * view * proj;
+                }
 
                 ObjectConstants objConstants;
                 objConstants.isSelected = render.isSelected ? 1 : 0;
@@ -51,24 +57,41 @@ public:
         }
     }
 
-    // 커맨드 리스트를 사용해 실제 GPU에 그리기 명령 하달
     static void Render(Registry& registry, ID3D12GraphicsCommandList* commandList) {
         auto& renders = registry.GetComponentMap<RenderComponent>();
 
+        // [수정 2] 렌더링 순서 보장: 3D 오브젝트 먼저, UI를 나중에 렌더링
+
+        // 1단계: 일반 3D 오브젝트 렌더링
         for (auto& [entity, render] : renders) {
-            commandList->SetGraphicsRootSignature(render.rootSignature.Get());
-            commandList->SetPipelineState(render.pso.Get());
-            commandList->IASetVertexBuffers(0, 1, &render.vertexBufferView);
-            commandList->IASetIndexBuffer(&render.indexBufferView);
-            commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            if (render.isUI) continue; // UI는 건너뜀
 
-            ID3D12DescriptorHeap* pHeaps[] = { render.descHeap.Get() };
-            commandList->SetDescriptorHeaps(_countof(pHeaps), pHeaps);
-
-            CD3DX12_GPU_DESCRIPTOR_HANDLE cbvGpuHandle(render.descHeap->GetGPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
-            commandList->SetGraphicsRootDescriptorTable(0, cbvGpuHandle);
-
-            commandList->DrawIndexedInstanced(render.indexCount, 1, 0, 0, 0);
+            DrawRenderComponent(render, commandList);
         }
+
+        // 2단계: UI 오브젝트 렌더링 (가장 위에 그려지도록 마지막에 실행)
+        for (auto& [entity, render] : renders) {
+            if (!render.isUI) continue; // 3D는 건너뜀
+
+            DrawRenderComponent(render, commandList);
+        }
+    }
+
+private:
+    // 중복되는 그리기 명령어를 묶어둔 헬퍼 함수
+    static void DrawRenderComponent(const RenderComponent& render, ID3D12GraphicsCommandList* commandList) {
+        commandList->SetGraphicsRootSignature(render.rootSignature.Get());
+        commandList->SetPipelineState(render.pso.Get());
+        commandList->IASetVertexBuffers(0, 1, &render.vertexBufferView);
+        commandList->IASetIndexBuffer(&render.indexBufferView);
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        ID3D12DescriptorHeap* pHeaps[] = { render.descHeap.Get() };
+        commandList->SetDescriptorHeaps(_countof(pHeaps), pHeaps);
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvGpuHandle(render.descHeap->GetGPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
+        commandList->SetGraphicsRootDescriptorTable(0, cbvGpuHandle);
+
+        commandList->DrawIndexedInstanced(render.indexCount, 1, 0, 0, 0);
     }
 };

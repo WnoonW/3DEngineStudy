@@ -194,7 +194,7 @@ public:
         UITransformComponent transform;
         transform.position = pos;
         transform.scale = scale;
-        DirectX::XMStoreFloat4x4(&transform.worldMatrix, DirectX::XMMatrixTranslation(pos.x, pos.y, 0.0f));
+        DirectX::XMStoreFloat4x4(&transform.worldMatrix, DirectX::XMMatrixTranslation(pos.x, pos.y, 1.0f));
         registry.AddComponent(entity, transform);
 
         // 2. Render & AABB 컴포넌트 세팅
@@ -210,11 +210,10 @@ public:
             // 셰이더의 float2 Position, float2 UV, float4 Color 규격에 맞춤
             // =========================================================================
             UIVertex Vertices[] = {
-                // position(x,y), uv(x,y), color(r,g,b,a)
-                { XMFLOAT2(-0.9f, -0.9f), XMFLOAT2(0, 1), XMFLOAT4(1, 0, 0, 0) }, //왼쪽아래
-                { XMFLOAT2(-0.5f, -0.9f), XMFLOAT2(1, 1), XMFLOAT4(1, 0, 0, 0) },	//오른쪽 아래
-                { XMFLOAT2(-0.5f, -0.5f), XMFLOAT2(1, 0), XMFLOAT4(1, 0, 0, 0) }, //오른쪽 위
-                { XMFLOAT2(-0.9f, -0.5f), XMFLOAT2(0, 0), XMFLOAT4(1, 0, 0, 0) }, //왼쪽 위
+                { DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }, // 좌하단
+                { DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }, // 좌상단
+                { DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }, // 우상단
+                { DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }  // 우하단
             };
 
             WORD Indices[] = { 0, 1, 2, 0, 2, 3 };

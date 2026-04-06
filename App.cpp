@@ -176,8 +176,9 @@ void App::Update(const GameTimer& gt)
 
     XMMATRIX proj = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
-    // 3. Render 시스템 상수 버퍼(CBV) 갱신
-    RenderSystem::UpdateConstants(mRegistry, view, proj);
+    
+    // [수정] UpdateConstants 호출 시 화면 너비/높이 픽셀값을 파라미터로 넘겨줌
+    RenderSystem::UpdateConstants(mRegistry, view, proj, (float)mClientWidth, (float)mClientHeight);
 }
 
 void App::Draw()
