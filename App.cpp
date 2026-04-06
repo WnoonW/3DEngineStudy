@@ -65,7 +65,7 @@ bool App::Initialize()
 
     // ECS Factory를 통한 생성
     CreateObject(XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
-    CreateUIObject(XMFLOAT2(0,0), XMFLOAT2(1, 1));
+    CreateUIObject(XMFLOAT3(0,0,0), XMFLOAT3(200, 200, 1));
 
     return true;
 }
@@ -226,7 +226,7 @@ void App::CreateObject(XMFLOAT3 pos, XMFLOAT3 scale)
     mEntities.push_back(entity);
 }
 
-void App::CreateUIObject(XMFLOAT2 pos, XMFLOAT2 scale)
+void App::CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale)
 {
     Entity uiEntity = EntityFactory::CreateUI(mRegistry, mResourceManager.get(), pos, scale);
 

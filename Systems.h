@@ -37,9 +37,7 @@ public:
                 DirectX::XMMATRIX worldViewProj;
 
                 if (render.isUI) {
-                    // [중요] 화면 픽셀 좌표계를 NDC(-1 ~ 1)로 변환하는 직교 투영 행렬 생성
-                    DirectX::XMMATRIX ortho = DirectX::XMMatrixOrthographicOffCenterLH(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
-                    // World(위치/크기) * Ortho(화면 비율 매핑)
+                    DirectX::XMMATRIX ortho = DirectX::XMMatrixOrthographicOffCenterLH(0.0f, screenWidth, screenHeight, 0.0f, -1.0f, 1.0f);
                     worldViewProj = world * ortho;
                 }
                 else {

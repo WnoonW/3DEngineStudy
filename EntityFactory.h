@@ -186,15 +186,15 @@ public:
     
 //=================================================================================================
 
-    static Entity CreateUI(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 scale) {
+    static Entity CreateUI(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale) {
         Entity entity = registry.CreateEntity();
         ID3D12Device14* device = rm->m_pDevice;
 
         // 1. Transform 설정
-        UITransformComponent transform;
+        TransformComponent transform;
         transform.position = pos;
         transform.scale = scale;
-        DirectX::XMStoreFloat4x4(&transform.worldMatrix, DirectX::XMMatrixTranslation(pos.x, pos.y, 1.0f));
+        DirectX::XMStoreFloat4x4(&transform.worldMatrix, DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z));
         registry.AddComponent(entity, transform);
 
         // 2. Render & AABB 컴포넌트 세팅
