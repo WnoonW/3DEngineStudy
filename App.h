@@ -2,149 +2,129 @@
 
 #include "AppUtill.h"
 #include "ResourceManager.h"
-#include "Object.h"
+// Object.h 삭제됨
 #include "GameTimer.h"
 #include "InputLayout.h"
 #include "RingBuffer.h"
 #include "UpdateLogic.h"
 #include "ECS.h"
 #include "PhysicsSystem.h"
+#include "EntityFactory.h" // 새로 추가됨
+#include "Systems.h"       // 새로 추가됨
 
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
+
 using Microsoft::WRL::ComPtr;
+
 class App
 {
 protected:
-	App(HINSTANCE hInstance);
-	~App();
+    App(HINSTANCE hInstance);
+    ~App();
 
 public:
-	static App* GetApp();
-	int Run();
-	void CleanUp();
-	virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static App* GetApp();
+    int Run();
+    void CleanUp();
+    virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-
-	//유틸
-	float     AspectRatio() {
-		return static_cast<float>(mClientWidth) / mClientHeight;
-	}
-protected:
-	//메인 로직
-	virtual bool Initialize();
-	void Update(const GameTimer& gt);
-	void Draw();
-
-	//클래스 생성
-	void CreateResourceManager(ID3D12Device14* device);
-	void CreateObject(XMFLOAT3 pos, XMFLOAT3 scale);
-	void CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale);
-	void DestroyObject(Object* object);
+    // 유틸
+    float AspectRatio() {
+        return static_cast<float>(mClientWidth) / mClientHeight;
+    }
 
 protected:
-	//초기화
-	bool InitMainWindow();
-	bool InitDirect3D();
-	void CreateCommandObjects();
-	void CreateSwapChain();
-	void CreateRtvAndDsvDescriptorHeaps();
-	void OnResize();
-	void FlushCommandQueue();
+    // 메인 로직
+    virtual bool Initialize();
+    void Update(const GameTimer& gt);
+    void Draw();
 
-	ID3D12Resource* CurrentBackBuffer()const;
-	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
+    // 클래스 생성
+    void CreateResourceManager(ID3D12Device14* device);
+    void CreateObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
+    void CreateUIObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
+    void DestroyObject(Entity entity); // 포인터 대신 Entity ID 사용
+
+protected:
+    // 초기화
+    bool InitMainWindow();
+    bool InitDirect3D();
+    void CreateCommandObjects();
+    void CreateSwapChain();
+    void CreateRtvAndDsvDescriptorHeaps();
+    void OnResize();
+    void FlushCommandQueue();
+
+    ID3D12Resource* CurrentBackBuffer()const;
+    D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
+    D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
 
 private:
-	//입력
-	virtual void OnMouseDown(WPARAM btnState, int x, int y);
-	virtual void OnMouseUp(WPARAM btnState, int x, int y);
-	virtual void OnMouseMove(WPARAM btnState, int x, int y);
+    // 입력
+    virtual void OnMouseDown(WPARAM btnState, int x, int y);
+    virtual void OnMouseUp(WPARAM btnState, int x, int y);
+    virtual void OnMouseMove(WPARAM btnState, int x, int y);
 
 protected:
-	static App* mApp;
-	HINSTANCE mhAppInst = nullptr;
-	HWND      mhMainWnd = nullptr;
+    static App* mApp;
 
-	bool      m4xMsaaState = false;    // 4X MSAA enabled
-	UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
+    HINSTANCE mhAppInst = nullptr;
+    HWND      mhMainWnd = nullptr;
 
-	//Objects
-	std::vector<std::unique_ptr<Object>> mObjects;
-	Object* mSelectedObject = nullptr;
+    bool      mAppPaused = false;
+    bool      mMinimized = false;
+    bool      mMaximized = false;
+    bool      mResizing = false;
 
-	//Class
-	std::unique_ptr<ResourceManager> mResourceManager = nullptr;
-	GameTimer mTimer;
-	Input mInputLayout;
-	logic mUpdateLogic;
-	RingBuffer rbKeyDown{16};
-	RingBuffer rbKeyUp{16};
-	Registry mRegistry;
+    // 디바이스 자원
+    ComPtr<ID3D12Device14> md3dDevice;
+    ComPtr<IDXGIFactory4> mdxgiFactory;
+    ComPtr<ID3D12CommandQueue> mCommandQueue;
+    ComPtr<ID3D12CommandAllocator> mCommandAlloc;
+    ComPtr<ID3D12GraphicsCommandList10> mCommandList;
+    ComPtr<IDXGISwapChain> mSwapChain;
+    ComPtr<ID3D12DescriptorHeap> mRtvHeap;
+    ComPtr<ID3D12DescriptorHeap> mDsvHeap;
+    ComPtr<ID3D12Resource> mSwapChainBuffer[2];
+    ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
-	//SwapChain
-	ComPtr<IDXGISwapChain1> mSwapChain = nullptr;
-	static const int SwapChainBufferCount = 2;
-	int mCurrBackBuffer = 0;
+    int mCurrBackBuffer = 0;
+    static const int SwapChainBufferCount = 2;
+    UINT mRtvDescriptorSize = 0;
+    UINT mDsvDescriptorSize = 0;
 
-	//Device
-	ComPtr<IDXGIFactory7> mdxgiFactory = nullptr;
-	ComPtr<ID3D12Device14> md3dDevice = nullptr;
-	ComPtr<ID3D12Fence> mFence;
-	UINT64 mCurrentFence = 0;
-	
-	//Events
-	HANDLE mFenceEvent = nullptr;
+    D3D12_VIEWPORT mScreenViewport;
+    D3D12_RECT mScissorRect;
 
-	//Command Objects
-	ComPtr<ID3D12CommandQueue> mCommandQueue = nullptr;
-	ComPtr<ID3D12CommandAllocator> mCommandAlloc = nullptr;
-	ComPtr<ID3D12GraphicsCommandList10> mCommandList = nullptr;
+    UINT mClientWidth = 800;
+    UINT mClientHeight = 600;
 
-	//Resources
-	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
-	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+    GameTimer mTimer;
+    InputLayout mInputLayout;
 
-	//Descriptor Heaps
-	ComPtr<ID3D12DescriptorHeap> mRtvHeap;
-	ComPtr<ID3D12DescriptorHeap> mDsvHeap;
+    // --- ECS 구조 반영 ---
+    std::unique_ptr<ResourceManager> mResourceManager;
+    Registry mRegistry;
+    std::vector<Entity> mEntities;          // 관리용 Entity 리스트
+    Entity mSelectedEntity = UINT32_MAX;    // 선택된 Entity ID (포인터 대신 ID)
 
-	D3D12_VIEWPORT mScreenViewport;
-	D3D12_RECT mScissorRect;
+    logic mLogic;
 
-	//Size
-	UINT mRtvDescriptorSize = 0;
-	UINT mDsvDescriptorSize = 0;
-	UINT mCbvSrvUavDescriptorSize = 0;
+    float a = 0;
+    float d = 0;
 
-	//Format
-	D3D_DRIVER_TYPE md3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
-	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    RingBuffer<KeyCode, 256> rbKeyDown;
+    RingBuffer<KeyCode, 256> rbKeyUp;
 
-	int mClientWidth = 800;
-	int mClientHeight = 600;
+    // 카메라 파라미터
+    float mTheta = 1.5f * DirectX::XM_PI;
+    float mPhi = DirectX::XM_PIDIV4;
+    float mRadius = 5.0f;
 
-protected:
-	XMFLOAT4X4 Imatrix = 
-		XMFLOAT4X4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4X4 mWorld = Imatrix;
-	XMFLOAT4X4 mView = Imatrix;
-	XMFLOAT4X4 mProj = Imatrix;
+    DirectX::XMFLOAT4X4 mView = MathHelper::Identity4x4();
+    DirectX::XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
-	float mTheta = 1.5f * XM_PI;
-	float mPhi = XM_PIDIV4;
-	float mRadius = 5.0f;
-
-	POINT mLastMousePos = { 0, 0 };
-
-
-	float a = 0;
-	float d = 0;
+    POINT mLastMousePos;
 };

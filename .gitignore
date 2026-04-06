@@ -8,5 +8,8 @@
 !*.cpp
 !*.h
 
+!*.vcxproj
+!*.vcxproj.filters
+
 # 4. (선택) 이 .gitignore 설정 파일 자체도 깃허브에 올려두면 좋습니다.
 !.gitignore
