@@ -83,16 +83,33 @@ protected:
     ComPtr<ID3D12CommandQueue> mCommandQueue;
     ComPtr<ID3D12CommandAllocator> mCommandAlloc;
     ComPtr<ID3D12GraphicsCommandList10> mCommandList;
-    ComPtr<IDXGISwapChain> mSwapChain;
+    ComPtr<IDXGISwapChain1> mSwapChain;
     ComPtr<ID3D12DescriptorHeap> mRtvHeap;
     ComPtr<ID3D12DescriptorHeap> mDsvHeap;
     ComPtr<ID3D12Resource> mSwapChainBuffer[2];
     ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
+
+    //
+    HANDLE mFenceEvent = nullptr;
+    UINT64 mCurrentFence = 0;
+    ComPtr<ID3D12Fence> mFence;
+
+    D3D_DRIVER_TYPE md3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
+    DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+    DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+    bool      m4xMsaaState = false;    // 4X MSAA enabled
+    UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
+    //
+
+
+
     int mCurrBackBuffer = 0;
     static const int SwapChainBufferCount = 2;
     UINT mRtvDescriptorSize = 0;
     UINT mDsvDescriptorSize = 0;
+    UINT mCbvSrvUavDescriptorSize = 0;
 
     D3D12_VIEWPORT mScreenViewport;
     D3D12_RECT mScissorRect;

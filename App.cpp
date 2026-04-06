@@ -491,7 +491,7 @@ void App::OnResize()
     mScreenViewport.MinDepth = 0.0f;
     mScreenViewport.MaxDepth = 1.0f;
 
-    mScissorRect = { 0, 0, mClientWidth, mClientHeight };
+    mScissorRect = { 0, 0, (long)mClientWidth, (long)mClientHeight };
 
     XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
     XMStoreFloat4x4(&mProj, P);
