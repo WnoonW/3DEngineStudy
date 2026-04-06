@@ -32,8 +32,8 @@ struct RenderComponent {
     bool isSelected = false;
     UINT indexCount = 0;
 
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+    D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeap;

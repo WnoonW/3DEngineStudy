@@ -1,6 +1,6 @@
 #include "inputlayout.h"
 
-KeyCode Input::ToKeyCode(WPARAM vkCode)
+KeyCode InputLayout::ToKeyCode(WPARAM vkCode)
 {
     // 대소문자 통합 처리 (대문자로 변환해서 매핑)
     if (vkCode >= 'A' && vkCode <= 'Z')
