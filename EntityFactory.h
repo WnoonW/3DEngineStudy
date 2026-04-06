@@ -58,10 +58,11 @@ public:
         }
         aabb.min = minPt; aabb.max = maxPt;
 
-        // 버퍼 생성 (ResourceManager 활용)
-        Microsoft::WRL::ComPtr<ID3D12Resource> vBuffer, iBuffer;
-        rm->CreateVertexBuffer(sizeof(ObjectVertex), _countof(Vertices), &render.vertexBufferView, vBuffer.GetAddressOf(), Vertices);
-        rm->CreateIndexBuffer(_countof(Indices), &render.indexBufferView, iBuffer.GetAddressOf(), Indices);
+        // ====================================================================
+        // [수정됨] 지역 변수(ComPtr) 대신 RenderComponent의 멤버에 직접 할당
+        // ====================================================================
+        rm->CreateVertexBuffer(sizeof(ObjectVertex), _countof(Vertices), &render.vertexBufferView, render.vertexBuffer.GetAddressOf(), Vertices);
+        rm->CreateIndexBuffer(_countof(Indices), &render.indexBufferView, render.indexBuffer.GetAddressOf(), Indices);
 
         // --- 서술자 힙(Descriptor Heap) ---
         render.descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -72,14 +73,14 @@ public:
         device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(render.descHeap.GetAddressOf()));
 
         // --- 상수 버퍼(Constant Buffer) ---
-        Microsoft::WRL::ComPtr<ID3D12Resource> cBuffer;
         UINT elementByteSize = (sizeof(ObjectConstants) + 255) & ~255;
-        rm->CreateConstantBuffer(elementByteSize, 1, cBuffer.GetAddressOf());
+        // [수정됨] render.constantBuffer 에 직접 할당
+        rm->CreateConstantBuffer(elementByteSize, 1, render.constantBuffer.GetAddressOf());
         CD3DX12_RANGE readRange(0, 0);
-        cBuffer->Map(0, &readRange, reinterpret_cast<void**>(&render.pMappedConstantData));
+        render.constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&render.pMappedConstantData));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-        cbvDesc.BufferLocation = cBuffer->GetGPUVirtualAddress();
+        cbvDesc.BufferLocation = render.constantBuffer->GetGPUVirtualAddress(); // [수정됨]
         cbvDesc.SizeInBytes = elementByteSize;
         CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
         device->CreateConstantBufferView(&cbvDesc, cbvHandle);

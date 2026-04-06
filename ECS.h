@@ -32,8 +32,15 @@ struct RenderComponent {
     bool isSelected = false;
     UINT indexCount = 0;
 
+    // --- [추가] 리소스의 수명을 유지하기 위한 스마트 포인터 ---
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
+    // -------------------------------------------------------------
+
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
     D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
+
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeap;
