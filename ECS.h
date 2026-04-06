@@ -21,6 +21,13 @@ struct TransformComponent {
     DirectX::XMFLOAT4X4 worldMatrix = {};
 };
 
+struct UITransformComponent {
+    DirectX::XMFLOAT2 position = { 0.0f, 0.0f};
+    DirectX::XMFLOAT2 rotation = { 0.0f, 0.0f};
+    DirectX::XMFLOAT2 scale = { 1.0f, 1.0f};
+    DirectX::XMFLOAT4X4 worldMatrix = {};
+};
+
 struct GravityComponent {
     float strength = -9.8f;
     bool isActive = true;

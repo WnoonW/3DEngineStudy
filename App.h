@@ -43,7 +43,7 @@ protected:
     // 클래스 생성
     void CreateResourceManager(ID3D12Device14* device);
     void CreateObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
-    void CreateUIObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
+    void CreateUIObject(DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 scale);
     void DestroyObject(Entity entity); // 포인터 대신 Entity ID 사용
 
 protected:
