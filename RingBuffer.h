@@ -1,72 +1,98 @@
 #pragma once
-#include <vector>
+#include <cstdint>
+#include <cstring>   // memcpy
+#include <algorithm> // std::min
 
-
+template<typename T, size_t Capacity>
 class RingBuffer
 {
 private:
-    std::vector<char> buffer;       // 또는 char buffer[8192];
-    size_t capacity = 0;
-
-    size_t readPos = 0;            // 읽을 위치 (head/front)
-    size_t writePos = 0;            // 쓸 위치 (tail/rear)
-
-    size_t count = 0;            // 현재 들어있는 데이터 개수 (필수!)
+    T buffer[Capacity];           // 고정 크기 배열 (std::array보다 간단하고 빠름)
+    size_t readPos = 0;
+    size_t writePos = 0;
+    size_t count = 0;          // 현재 저장된 개수
 
 public:
-    RingBuffer(size_t size) : buffer(size), capacity(size) {}
+    // 생성자 (필요 없으면 생략 가능)
+    RingBuffer() = default;
 
-    // 데이터 넣기 (바이트 단위 예시)
-    bool Push(const void* data, size_t len)
+    // 데이터 넣기
+    bool Push(const T& data)
     {
-        if (count + len > capacity) return false;  // 꽉 참
+        if (count >= Capacity) return false;   // 가득 참
 
-        // 끝에서 넘치면 두 번에 나눠 복사
-        size_t spaceToEnd = capacity - writePos;
-        if (len <= spaceToEnd)
-        {
-            memcpy(&buffer[writePos], data, len);
-            writePos += len;
-        }
-        else
-        {
-            memcpy(&buffer[writePos], data, spaceToEnd);
-            memcpy(&buffer[0], (char*)data + spaceToEnd, len - spaceToEnd);
-            writePos = len - spaceToEnd;
-        }
-
-        count += len;
-        if (writePos >= capacity) writePos -= capacity;  // 모듈러 연산 대신
+        buffer[writePos] = data;
+        writePos = (writePos + 1) % Capacity;
+        count++;
         return true;
     }
 
-    // 데이터 꺼내기
-    size_t Pop(void* dest, size_t maxLen)
+    // 여러 개 한 번에 넣기 (필요할 때)
+    bool Push(const T* data, size_t len)
     {
-        size_t canRead = min(count, maxLen);
+        if (count + len > Capacity) return false;
+
+        for (size_t i = 0; i < len; ++i)
+        {
+            buffer[writePos] = data[i];
+            writePos = (writePos + 1) % Capacity;
+        }
+        count += len;
+        return true;
+    }
+
+    // 데이터 하나 꺼내기
+    bool Pop(T& outData)
+    {
+        if (count == 0) return false;
+
+        outData = buffer[readPos];
+        readPos = (readPos + 1) % Capacity;
+        count--;
+        return true;
+    }
+
+    // 여러 개 한 번에 꺼내기
+    size_t Pop(T* dest, size_t maxLen)
+    {
+        size_t canRead = std::min(count, maxLen);
         if (canRead == 0) return 0;
 
-        size_t spaceToEnd = capacity - readPos;
-        if (canRead <= spaceToEnd)
+        for (size_t i = 0; i < canRead; ++i)
         {
-            memcpy(dest, &buffer[readPos], canRead);
-            readPos += canRead;
+            dest[i] = buffer[readPos];
+            readPos = (readPos + 1) % Capacity;
         }
-        else
-        {
-            memcpy(dest, &buffer[readPos], spaceToEnd);
-            memcpy((char*)dest + spaceToEnd, &buffer[0], canRead - spaceToEnd);
-            readPos = canRead - spaceToEnd;
-        }
-
         count -= canRead;
-        if (readPos >= capacity) readPos -= capacity;
-
         return canRead;
     }
 
+    // Peek (데이터를 꺼내지 않고 미리 보기) - 패킷 파싱할 때 매우 유용
+    bool Peek(T& outData) const
+    {
+        if (count == 0) return false;
+        outData = buffer[readPos];
+        return true;
+    }
+
+    size_t Peek(T* dest, size_t maxLen) const
+    {
+        size_t canRead = std::min(count, maxLen);
+        if (canRead == 0) return 0;
+
+        size_t pos = readPos;
+        for (size_t i = 0; i < canRead; ++i)
+        {
+            dest[i] = buffer[pos];
+            pos = (pos + 1) % Capacity;
+        }
+        return canRead;
+    }
+
+    // 상태 확인
     bool IsEmpty() const { return count == 0; }
-    bool IsFull()  const { return count == capacity; }
+    bool IsFull()  const { return count == Capacity; }
     size_t Size()  const { return count; }
-    size_t Free()  const { return capacity - count; }
+    size_t Free()  const { return Capacity - count; }
+    constexpr size_t MaxCapacity() const { return Capacity; }
 };

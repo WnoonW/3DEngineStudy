@@ -65,7 +65,7 @@ enum class KeyCode : uint8_t
     COUNT  // 배열 크기 / 열거 끝 표시용
 };
 
-class Input
+class InputLayout
 {
 public:
 	KeyCode ToKeyCode(WPARAM vkCode);

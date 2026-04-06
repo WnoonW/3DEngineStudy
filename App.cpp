@@ -1,4 +1,5 @@
 #include "App.h"
+#include <DirectXColors.h>
 
 using Microsoft::WRL::ComPtr;
 

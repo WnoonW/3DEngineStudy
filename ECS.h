@@ -21,6 +21,11 @@ struct TransformComponent {
     DirectX::XMFLOAT4X4 worldMatrix = {};
 };
 
+struct GravityComponent {
+    float strength = -9.8f;
+    bool isActive = true;
+};
+
 // 렌더링에 필요한 버퍼, 뷰, 루트 시그니처 등을 담는 데이터
 struct RenderComponent {
     bool isUI = false;

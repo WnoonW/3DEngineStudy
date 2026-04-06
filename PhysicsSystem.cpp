@@ -2,8 +2,8 @@
 
 void PhysicsSystem::Update(float deltaTime, Registry& registry) {
     // GravityComponent를 가진 모든 엔티티를 순회
-    auto& gravityMap = Registry::GetComponentMap<GravityComponent>();
-    auto& transformMap = Registry::GetComponentMap<TransformComponent>();
+    auto& gravityMap = registry.GetComponentMap<GravityComponent>();
+    auto& transformMap = registry.GetComponentMap<TransformComponent>();
 
     for (auto& [entity, gravity] : gravityMap) {
         // 중력이 활성화된 경우에만 로직 수행

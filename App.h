@@ -2,9 +2,8 @@
 
 #include "AppUtill.h"
 #include "ResourceManager.h"
-// Object.h 삭제됨
-#include "GameTimer.h"
 #include "InputLayout.h"
+#include "GameTimer.h"
 #include "RingBuffer.h"
 #include "UpdateLogic.h"
 #include "ECS.h"
