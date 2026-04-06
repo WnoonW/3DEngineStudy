@@ -9,7 +9,7 @@ template<typename T, size_t Capacity>
 class RingBuffer
 {
 private:
-    T buffer[Capacity];
+    T buffer[Capacity] = {};
     size_t readPos = 0;
     size_t writePos = 0;
     size_t count = 0;

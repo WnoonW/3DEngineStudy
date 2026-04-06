@@ -20,6 +20,7 @@ App::App(HINSTANCE hInstance) : mhAppInst(hInstance)
     mApp = this;
     mScreenViewport = { 0,0,0,0 };
     mScissorRect = { 0,0,0,0 };
+    mLastMousePos = { 0, 0 };
 }
 
 App::~App()
@@ -270,7 +271,7 @@ bool App::InitMainWindow()
         return false;
     }
 
-    RECT R = { 0, 0, mClientWidth, mClientHeight };
+    RECT R = { 0, 0, (long)mClientWidth, (long)mClientHeight };
     AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
     int width = R.right - R.left;
     int height = R.bottom - R.top;
@@ -511,47 +512,73 @@ void App::FlushCommandQueue()
 
 void App::CleanUp()
 {
-    CloseHandle(mFenceEvent);
-    mFenceEvent = nullptr;
-    mObjects.clear();
+    if (md3dDevice != nullptr) 
+    {
+        FlushCommandQueue();
+    }
+
+    if (mFenceEvent != nullptr) {
+        CloseHandle(mFenceEvent);
+        mFenceEvent = nullptr;
+    }
+    
+    mEntities.clear();
+
+    //mRegistry.Clear();
 }
 
 //Control
 void App::OnMouseDown(WPARAM btnState, int x, int y)
 {
-    if (btnState & MK_LBUTTON)
-    {
-
-        XMVECTOR rayOrigin, rayDir;
-        mUpdateLogic.ScreenPointToWorldRay(mClientWidth, mClientHeight, x, y, mView, mProj, rayOrigin, rayDir);
-
-
-        Object* selected = mUpdateLogic.PickObject(mObjects, rayOrigin, rayDir);
-
-        if (selected)
-        {
-            if (mSelectedObject)
-            {
-                mSelectedObject->isSelected = false; // 이전에 선택된 오브젝트가 있다면 불 끄기
-            }
-            mSelectedObject = selected;  // 멤버 변수에 저장
-            mSelectedObject->isSelected = true;  // 선택된 오브젝트 표시 (예: 색상 변경)
-            OutputDebugStringA("Object selected!\n");
-        }
-        else
-        {
-            if (mSelectedObject)
-            {
-                mSelectedObject->isSelected = false;
-                mSelectedObject = nullptr;
-            }
-        }
-    }
-
     mLastMousePos.x = x;
     mLastMousePos.y = y;
 
     SetCapture(mhMainWnd);
+
+    // 좌클릭 시 Raycast 기반 피킹(Picking) 처리
+    if ((btnState & MK_LBUTTON) != 0)
+    {
+        DirectX::XMVECTOR rayOrigin, rayDir;
+
+        // 1. 화면의 마우스 클릭 좌표를 월드 공간의 Ray로 변환
+        mLogic.ScreenPointToWorldRay(
+            mClientWidth, mClientHeight,
+            x, y,
+            mView, mProj,
+            rayOrigin, rayDir
+        );
+
+        // 2. 기존에 선택되어 있던 엔티티가 있다면 isSelected 플래그 해제
+        if (mSelectedEntity != UINT32_MAX)
+        {
+            auto& renders = mRegistry.GetComponentMap<RenderComponent>();
+            if (renders.find(mSelectedEntity) != renders.end())
+            {
+                renders[mSelectedEntity].isSelected = false;
+            }
+        }
+
+        // 3. ECS 방식에 맞춰 수정된 PickObject 호출 (반환값: Entity ID)
+        Entity pickedEntity = mLogic.PickObject(mRegistry, rayOrigin, rayDir);
+
+        // 4. 새로운 오브젝트 선택 결과 적용
+        if (pickedEntity != UINT32_MAX)
+        {
+            mSelectedEntity = pickedEntity; // 선택된 엔티티 ID 갱신
+
+            auto& renders = mRegistry.GetComponentMap<RenderComponent>();
+            if (renders.find(mSelectedEntity) != renders.end())
+            {
+                // 선택된 엔티티의 렌더 컴포넌트 상태 업데이트
+                renders[mSelectedEntity].isSelected = true;
+            }
+        }
+        else
+        {
+            // 아무것도 클릭되지 않았을 때 (허공 클릭)
+            mSelectedEntity = UINT32_MAX;
+        }
+    }
 }
 
 void App::OnMouseUp(WPARAM btnState, int x, int y)
