@@ -323,8 +323,13 @@ bool App::InitDirect3D()
                 debugController1->SetEnableGPUBasedValidation(TRUE);
             }
 
-            ComPtr<ID3D12Debug2> debug2;
-            if (SUCCEEDED(debugController.As(&debug2))) debug2->SetEnableShaderBasedValidation(TRUE);
+            ComPtr<ID3D12Debug3> debug3;
+            if (SUCCEEDED(debugController.As(&debug3)))
+            {
+                // 이제 에러 없이 호출 가능해야 합니다.
+                //debug3->SetEnableShaderBasedValidation(TRUE);
+                debug3->SetEnableGPUBasedValidation(TRUE);
+            }
 
             flags = DXGI_CREATE_FACTORY_DEBUG;
         }
