@@ -23,6 +23,12 @@ void PhysicsSystem::Update(float deltaTime, Registry& registry) {
                     transform.velocity.y = 0.0f;
                     gravity.isActive = false; // 정지
                 }
+
+                if (transform.position.y >= 5.0f) {
+                    transform.position.y = 5.0f;
+                    transform.velocity.y = 0.0f;
+                    gravity.isActive = false; // 정지
+                }
             }
         }
     }

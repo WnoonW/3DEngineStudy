@@ -76,6 +76,37 @@ Entity logic::PickObject(Registry& registry, XMVECTOR rayOrigin, XMVECTOR rayDir
     return closestEntity;
 }
 
+Entity logic::PickUI(Registry& registry, int mouseX, int mouseY)
+{
+    auto& renders = registry.GetComponentMap<RenderComponent>();
+    auto& transforms = registry.GetComponentMap<TransformComponent>();
+    auto& aabbs = registry.GetComponentMap<AABBComponent>();
+
+    for (auto& [entity, render] : renders)
+    {
+        // 1. UI 컴포넌트인지 확인
+        if (!render.isUI) continue;
+        if (transforms.find(entity) == transforms.end() || aabbs.find(entity) == aabbs.end()) continue;
+
+        auto& transform = transforms[entity];
+        auto& aabb = aabbs[entity];
+
+        // 2. UI의 화면상 영역 계산 (단순화된 예시)
+        // Transform의 position과 scale을 pixel 단위로 가정
+        float left = transform.position.x + aabb.min.x * transform.scale.x;
+        float right = transform.position.x + aabb.max.x * transform.scale.x;
+        float top = transform.position.y + aabb.min.y * transform.scale.y;
+        float bottom = transform.position.y + aabb.max.y * transform.scale.y;
+
+        // 3. 마우스 좌표가 UI 사각형 안에 있는지 검사
+        if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+        {
+            return entity;
+        }
+    }
+    return UINT32_MAX;
+}
+
 bool logic::RayIntersectsAABB(const XMVECTOR& rayOrigin, const XMVECTOR& rayDir, const XMFLOAT3& aabbMin, const XMFLOAT3& aabbMax, float& tminOut, float& tmaxOut)
 {
     XMVECTOR epsilon = XMVectorReplicate(1e-20f);

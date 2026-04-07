@@ -541,15 +541,25 @@ void App::OnMouseDown(WPARAM btnState, int x, int y)
     // 좌클릭 시 Raycast 기반 피킹(Picking) 처리
     if ((btnState & MK_LBUTTON) != 0)
     {
-        DirectX::XMVECTOR rayOrigin, rayDir;
+        // 1. UI 클릭 체크
+        Entity clickedUI = mLogic.PickUI(mRegistry, x, y);
 
-        // 1. 화면의 마우스 클릭 좌표를 월드 공간의 Ray로 변환
-        mLogic.ScreenPointToWorldRay(
-            mClientWidth, mClientHeight,
-            x, y,
-            mView, mProj,
-            rayOrigin, rayDir
-        );
+        if (clickedUI != UINT32_MAX)
+        {
+            // UI를 클릭했다면: 모든 중력 컴포넌트의 strength 부호를 반전
+            auto& gravityMap = mRegistry.GetComponentMap<GravityComponent>();
+            for (auto& [entity, gravity] : gravityMap)
+            {
+                gravity.strength *= -1.0f; // 중력 방향 반전
+                gravity.isActive = true;   // 멈춰있던 물체도 다시 움직이게 활성화
+            }
+            OutputDebugStringA("UI Clicked: Gravity Inverted!\n");
+            return; // UI를 클릭했으므로 오브젝트 피킹은 건너뜀
+        }
+
+        // 2. UI 클릭이 아닐 경우 기존 오브젝트 피킹 수행
+        DirectX::XMVECTOR rayOrigin, rayDir;
+        mLogic.ScreenPointToWorldRay(mClientWidth, mClientHeight, x, y, mView, mProj, rayOrigin, rayDir);
 
         // 2. 기존에 선택되어 있던 엔티티가 있다면 isSelected 플래그 해제
         if (mSelectedEntity != UINT32_MAX)
