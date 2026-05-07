@@ -3,6 +3,7 @@
 #include "ResourceManager.h"
 #include "AppUtill.h"
 #include "Systems.h"
+#include "src/ObjLoader.h"
 
 // 정점 구조체들
 struct ObjectVertex {
@@ -343,4 +344,9 @@ public:
 
         return entity;
     }
+
+    static Entity CreateMesh(const std::string& filename, Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale)
+    {
+
+    };
 };

@@ -46,6 +46,8 @@ protected:
     void CreateUIObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
     void DestroyObject(Entity entity); // 포인터 대신 Entity ID 사용
 
+	void CreateMesh(); // 테스트용 메쉬 생성 함수 (ECS Factory로 대체 예정)
+
 protected:
     // 초기화
     bool InitMainWindow();

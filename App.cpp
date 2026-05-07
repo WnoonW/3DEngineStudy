@@ -67,6 +67,8 @@ bool App::Initialize()
     CreateObject(XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
     CreateUIObject(XMFLOAT3(0,0,0), XMFLOAT3(200, 200, 1));
 
+    CreateMesh();
+
     return true;
 }
 
@@ -231,6 +233,13 @@ void App::CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale)
     Entity uiEntity = EntityFactory::CreateUI(mRegistry, mResourceManager.get(), pos, scale);
 
     mEntities.push_back(uiEntity);
+}
+
+void App::CreateMesh()
+{
+    // 테스트용 메쉬 생성 (ECS Factory로 대체 예정)
+    Entity meshEntity = EntityFactory::CreateMesh(std::string("asset/bibian.obj"),mRegistry, mResourceManager.get(), XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
+    mEntities.push_back(meshEntity);
 }
 
 void App::DestroyObject(Entity entity)

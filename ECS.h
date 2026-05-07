@@ -50,6 +50,14 @@ struct RenderComponent {
     UINT8* pMappedConstantData = nullptr;
 };
 
+struct MeshComponent {
+    Microsoft::WRL::ComPtr<ID3D12Resource> VertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> IndexBuffer;
+    UINT VertexCount = 0;
+    UINT IndexCount = 0;
+    // 나중에 MaterialComponent와 연동 예정
+};
+
 // 충돌 및 피킹(Picking)을 위한 바운딩 박스
 struct AABBComponent {
     DirectX::XMFLOAT3 min;
