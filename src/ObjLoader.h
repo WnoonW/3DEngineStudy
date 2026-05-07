@@ -12,5 +12,5 @@ struct Vertex {
 
 class ObjLoader {
 public:
-    static bool Load(const std::string& filename, std::vector<Vertex>& outVertices, std::vector<uint32_t>& outIndices);
+    static bool Load(const std::string& filename, std::vector<Vertex>& outVertices, std::vector<WORD>& outIndices);
 };

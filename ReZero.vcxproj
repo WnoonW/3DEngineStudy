@@ -149,6 +149,7 @@
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="ECS.h" />
     <ClInclude Include="EntityFactory.h" />
+    <ClInclude Include="EntityFactory1.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="InputLayout.h" />
     <ClInclude Include="MathHelper.h" />
