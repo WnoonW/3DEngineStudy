@@ -3,7 +3,7 @@
 #include <sstream>
 #include <algorithm>
 
-bool ObjLoader::Load(const std::string& filename, std::vector<Vertex>& outVertices, std::vector<uint32_t>& outIndices) {
+bool ObjLoader::Load(const std::string& filename, std::vector<Vertex>& outVertices, std::vector<WORD>& outIndices) {
     outVertices.clear();
     outIndices.clear();
 
@@ -56,7 +56,7 @@ bool ObjLoader::Load(const std::string& filename, std::vector<Vertex>& outVertic
                 if (tIdx > 0 && tIdx <= texCoords.size()) vertex.TexCoord = texCoords[tIdx - 1];
 
                 outVertices.push_back(vertex);
-                outIndices.push_back(static_cast<uint32_t>(outVertices.size() - 1));
+                outIndices.push_back(static_cast<WORD>(outVertices.size() - 1));
             }
         }
     }

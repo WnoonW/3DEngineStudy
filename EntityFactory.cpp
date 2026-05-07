@@ -285,10 +285,10 @@ Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry
     }
 
     // 2. Vertex / Index Buffer 생성 (매번 새로 생성)
-    rm->CreateVertexBuffer(sizeof(Vertex), meshData.vertices.size(),
+    rm->CreateVertexBuffer(sizeof(Vertex), (DWORD)meshData.vertices.size(),
         &render.vertexBufferView, render.vertexBuffer.GetAddressOf(), meshData.vertices.data());
 
-    rm->CreateIndexBuffer(meshData.indices.size(), &render.indexBufferView,
+    rm->CreateIndexBuffer((DWORD)meshData.indices.size(), &render.indexBufferView,
         render.indexBuffer.GetAddressOf(), meshData.indices.data());
 
     render.indexCount = (UINT)meshData.indices.size();
