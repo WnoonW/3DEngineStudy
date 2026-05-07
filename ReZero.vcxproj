@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="AppUtill.cpp" />
+    <ClCompile Include="EntityFactory.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="main.cpp" />
