@@ -238,7 +238,7 @@ void App::CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale)
 void App::CreateMesh()
 {
     // 테스트용 메쉬 생성 (ECS Factory로 대체 예정)
-    Entity meshEntity = EntityFactory::CreateMesh(std::string("asset/bibian.obj"),mRegistry, mResourceManager.get(), XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
+    Entity meshEntity = EntityFactory::CreateMesh("asset/bibian.obj",mRegistry, mResourceManager.get(), XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
     mEntities.push_back(meshEntity);
 }
 
