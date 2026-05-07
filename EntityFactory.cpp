@@ -279,8 +279,8 @@ Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry
 
     // 1. OBJ 파일 파싱
     MeshData meshData;
-    if (!ObjLoader::Load(filename, meshData.vertices, meshData.indices)) {  // ObjLoader의 실제 함수명에 맞게 수정해주세요
-        // 실패 시 Cube로 fallback
+    if (!ObjLoader::Load(filename, meshData.vertices, meshData.indices)) 
+    {
         return CreateCube(registry, rm, pos, scale);
     }
 
