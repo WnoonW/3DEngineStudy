@@ -281,6 +281,7 @@ Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry
     MeshData meshData;
     if (!ObjLoader::Load(filename, meshData.vertices, meshData.indices)) 
     {
+        OutputDebugStringA("OBJ Load Failed! Falling back to Cube.\n");
         return CreateCube(registry, rm, pos, scale);
     }
 
