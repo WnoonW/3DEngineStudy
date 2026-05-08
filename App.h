@@ -8,14 +8,15 @@
 #include "UpdateLogic.h"
 #include "ECS.h"
 #include "PhysicsSystem.h"
-#include "EntityFactory.h" // 새로 추가됨
-#include "Systems.h"       // 새로 추가됨
+#include "EntityFactory.h"
+#include "Systems.h"
 
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 
 using Microsoft::WRL::ComPtr;
+using namespace DirectX;   // D 단계: 전체 통일
 
 class App
 {
@@ -29,27 +30,20 @@ public:
     void CleanUp();
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-    // 유틸
-    float AspectRatio() {
-        return static_cast<float>(mClientWidth) / mClientHeight;
-    }
+    float AspectRatio() { return static_cast<float>(mClientWidth) / mClientHeight; }
 
 protected:
-    // 메인 로직
     virtual bool Initialize();
     void Update(const GameTimer& gt);
     void Draw();
 
-    // 클래스 생성
     void CreateResourceManager(ID3D12Device14* device);
-    void CreateObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
-    void CreateUIObject(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
-    void DestroyObject(Entity entity); // 포인터 대신 Entity ID 사용
-
-	void CreateMesh(); // 테스트용 메쉬 생성 함수 (ECS Factory로 대체 예정)
+    void CreateObject(XMFLOAT3 pos, XMFLOAT3 scale);
+    void CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale);
+    void DestroyObject(Entity entity);
+    void CreateMesh();
 
 protected:
-    // 초기화
     bool InitMainWindow();
     bool InitDirect3D();
     void CreateCommandObjects();
@@ -63,7 +57,6 @@ protected:
     D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
 
 private:
-    // 입력
     virtual void OnMouseDown(WPARAM btnState, int x, int y);
     virtual void OnMouseUp(WPARAM btnState, int x, int y);
     virtual void OnMouseMove(WPARAM btnState, int x, int y);
@@ -79,7 +72,6 @@ protected:
     bool      mMaximized = false;
     bool      mResizing = false;
 
-    // 디바이스 자원
     ComPtr<ID3D12Device14> md3dDevice;
     ComPtr<IDXGIFactory4> mdxgiFactory;
     ComPtr<ID3D12CommandQueue> mCommandQueue;
@@ -91,8 +83,6 @@ protected:
     ComPtr<ID3D12Resource> mSwapChainBuffer[2];
     ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
-
-    //
     HANDLE mFenceEvent = nullptr;
     UINT64 mCurrentFence = 0;
     ComPtr<ID3D12Fence> mFence;
@@ -101,11 +91,8 @@ protected:
     DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-    bool      m4xMsaaState = false;    // 4X MSAA enabled
-    UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
-    //
-
-
+    bool      m4xMsaaState = false;
+    UINT      m4xMsaaQuality = 0;
 
     int mCurrBackBuffer = 0;
     static const int SwapChainBufferCount = 2;
@@ -122,27 +109,26 @@ protected:
     GameTimer mTimer;
     InputLayout mInputLayout;
 
-    // --- ECS 구조 반영 ---
     std::unique_ptr<ResourceManager> mResourceManager;
     Registry mRegistry;
-    std::vector<Entity> mEntities;          // 관리용 Entity 리스트
-    Entity mSelectedEntity = UINT32_MAX;    // 선택된 Entity ID (포인터 대신 ID)
+    std::vector<Entity> mEntities;
+    Entity mSelectedEntity = UINT32_MAX;
 
     logic mLogic;
 
+    // 디버그용 변수 (D 단계에서 주석 처리)
     float a = 0;
     float d = 0;
 
     RingBuffer<KeyCode, 256> rbKeyDown;
     RingBuffer<KeyCode, 256> rbKeyUp;
 
-    // 카메라 파라미터
-    float mTheta = 1.5f * DirectX::XM_PI;
-    float mPhi = DirectX::XM_PIDIV4;
+    float mTheta = 1.5f * XM_PI;
+    float mPhi = XM_PIDIV4;
     float mRadius = 5.0f;
 
-    DirectX::XMFLOAT4X4 mView = MathHelper::Identity4x4();
-    DirectX::XMFLOAT4X4 mProj = MathHelper::Identity4x4();
+    XMFLOAT4X4 mView = MathHelper::Identity4x4();
+    XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
     POINT mLastMousePos;
 };
