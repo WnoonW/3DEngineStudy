@@ -114,7 +114,7 @@ Entity EntityFactory::CreateUI(Registry& registry, ResourceManager* rm, DirectX:
 }
 
 // ====================== CreateMesh (OBJ) ======================
-Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry, ResourceManager* rm,
+Entity EntityFactory::CreateMesh(const std::wstring& filename, Registry& registry, ResourceManager* rm,
     DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale)
 {
     Entity entity = registry.CreateEntity();

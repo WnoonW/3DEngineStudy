@@ -41,13 +41,16 @@ struct SubMesh {
 class ObjLoader {
 public:
     // 기존 API (backward compatibility)
-    static bool Load(const std::string& filename,
+    static bool Load(const std::wstring& filename,
         std::vector<Vertex>& outVertices,
         std::vector<WORD>& outIndices);
 
     // MTL 지원 API (추천)
-    static bool LoadWithMaterials(const std::string& filename,
-        std::vector<SubMesh>& outSubMeshes);
+    static bool LoadWithMaterials(
+        const std::wstring& objFilename,
+        std::vector<SubMesh>& outSubMeshes,
+        const std::wstring& mtlFilename
+    );
 
 private:
     static void ParseFace(const std::string& token,

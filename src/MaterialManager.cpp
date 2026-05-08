@@ -174,11 +174,11 @@ Material* MaterialManager::GetUIMaterial(ResourceManager* rm)
     return &mUIMaterial;
 }
 
-Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::string& filename)
+Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::wstring& filename)
 {
     // 1. OBJ 파일 파싱
 	std::vector<SubMesh> meshData;
-    if (!ObjLoader::LoadWithMaterials(filename, meshData))
+    if (!ObjLoader::LoadWithMaterials(filename + L".obj", meshData, filename + L".mtl"))
     {
         OutputDebugStringA("OBJ Load Failed! Falling back to Cube.\n");
         return nullptr;
@@ -191,6 +191,28 @@ Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::strin
     rm->CreateIndexBuffer((DWORD)meshData[0].indices.size(), &mMeshMaterial.data.indexBufferView,
         mMeshMaterial.data.indexBuffer.GetAddressOf(), meshData[0].indices.data());
     mMeshMaterial.data.indexCount = (UINT)meshData[0].indices.size();
+
+    // 3. Texture 로드 (MTL의 map_Kd 경로 사용)
+    if (!meshData.empty() && !meshData[0].material.diffuseMap.empty())
+    {
+        // MTL에서 읽은 diffuseMap 경로로 texture 생성
+        D3D12_RESOURCE_DESC texDesc = {};
+        rm->CreateTexture3(
+            mMeshMaterial.data.texture.GetAddressOf(),
+            &texDesc,
+            meshData[0].material.diffuseMap.c_str()   // ← 여기!
+        );
+    }
+    else
+    {
+        // fallback (기존에 쓰던 기본 텍스처)
+        D3D12_RESOURCE_DESC texDesc = {};
+        rm->CreateTexture3(
+            mMeshMaterial.data.texture.GetAddressOf(),
+            &texDesc,
+            L"assets/textures/girl.dds"   // 또는 원하는 기본 텍스처 경로
+        );
+    }
 
     if (!mMeshInitialized) {
         

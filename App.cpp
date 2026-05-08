@@ -237,7 +237,7 @@ void App::CreateUIObject(XMFLOAT3 pos, XMFLOAT3 scale)
 
 void App::CreateMesh()
 {
-    Entity meshEntity = EntityFactory::CreateMesh("assets/bibian",mRegistry, mResourceManager.get(), XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
+    Entity meshEntity = EntityFactory::CreateMesh(L"assets/bibian",mRegistry, mResourceManager.get(), XMFLOAT3(0, 0, 0), XMFLOAT3(1, 1, 1));
 
     mEntities.push_back(meshEntity);
 }

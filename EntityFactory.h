@@ -26,7 +26,7 @@ class EntityFactory {
 public:
     static Entity CreateCube(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
     static Entity CreateUI(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
-    static Entity CreateMesh(const std::string& filename, Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
+    static Entity CreateMesh(const std::wstring& filename, Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
 
 private:
     // ==================== 중복 제거용 Helper ====================
