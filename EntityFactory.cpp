@@ -1,5 +1,6 @@
 #include "EntityFactory.h"
-#include "src/ObjLoader.h"     
+#include "src/ObjLoader.h"    
+#include "src/MaterialManager.h"
 #include <vector>
 
 void EntityFactory::SetupTransformComponent(Registry& registry, Entity entity,
@@ -51,93 +52,27 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
 Entity EntityFactory::CreateCube(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale)
 {
     Entity entity = registry.CreateEntity();
-    ID3D12Device14* device = rm->m_pDevice;
-
     SetupTransformComponent(registry, entity, pos, scale);
 
     RenderComponent render;
     AABBComponent aabb;
     render.isUI = false;
 
-    static SharedRenderResources s_Shared;
-    if (!s_Shared.isInitialized) {
-        ObjectVertex Vertices[] = {
-            { DirectX::XMFLOAT3(-1, -1, +1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(+1, -1, +1), DirectX::XMFLOAT2(1, 1) }, { DirectX::XMFLOAT3(+1, +1, +1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(-1, +1, +1), DirectX::XMFLOAT2(0, 0) },
-            { DirectX::XMFLOAT3(-1, -1, -1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(-1, +1, -1), DirectX::XMFLOAT2(0, 0) }, { DirectX::XMFLOAT3(+1, +1, -1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(+1, -1, -1), DirectX::XMFLOAT2(1, 1) },
-            { DirectX::XMFLOAT3(+1, -1, -1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(+1, -1, +1), DirectX::XMFLOAT2(1, 1) }, { DirectX::XMFLOAT3(+1, +1, +1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(+1, +1, -1), DirectX::XMFLOAT2(0, 0) },
-            { DirectX::XMFLOAT3(-1, -1, +1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(-1, +1, +1), DirectX::XMFLOAT2(0, 0) }, { DirectX::XMFLOAT3(-1, +1, -1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(-1, -1, -1), DirectX::XMFLOAT2(1, 1) },
-            { DirectX::XMFLOAT3(-1, +1, -1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(-1, +1, +1), DirectX::XMFLOAT2(0, 0) }, { DirectX::XMFLOAT3(+1, +1, +1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(+1, +1, -1), DirectX::XMFLOAT2(1, 1) },
-            { DirectX::XMFLOAT3(-1, -1, -1), DirectX::XMFLOAT2(0, 1) }, { DirectX::XMFLOAT3(+1, -1, -1), DirectX::XMFLOAT2(1, 1) }, { DirectX::XMFLOAT3(+1, -1, +1), DirectX::XMFLOAT2(1, 0) }, { DirectX::XMFLOAT3(-1, -1, +1), DirectX::XMFLOAT2(0, 0) }
-        };
+    // ★ MaterialManager에서 Material 하나만 받아서 모든 PSO/RootSignature/Buffer 연결
+    Material* mat = MaterialManager::GetInstance().GetCubeMaterial(rm);
 
-        WORD Indices[] = {
-            0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23
-        };
-        s_Shared.indexCount = _countof(Indices);
-
-        // 버퍼 생성, 텍스처 로드, 셰이더 컴파일을 딱 한 번만 수행!
-        rm->CreateVertexBuffer(sizeof(ObjectVertex), _countof(Vertices), &s_Shared.vertexBufferView, s_Shared.vertexBuffer.GetAddressOf(), Vertices);
-        rm->CreateIndexBuffer(_countof(Indices), &s_Shared.indexBufferView, s_Shared.indexBuffer.GetAddressOf(), Indices);
-
-        D3D12_RESOURCE_DESC desc = {};
-        rm->CreateTexture3(s_Shared.texture.GetAddressOf(), &desc, L"assets/textures/girl.dds");
-
-        auto vs = AppUtill::CompileShader(L"Shaders\\color_v2.hlsl", nullptr, "VS", "vs_5_0");
-        auto ps = AppUtill::CompileShader(L"Shaders\\color_v2.hlsl", nullptr, "PS", "ps_5_0");
-
-        std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-        };
-
-        CD3DX12_DESCRIPTOR_RANGE ranges[2];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        CD3DX12_ROOT_PARAMETER rootParams[1];
-        rootParams[0].InitAsDescriptorTable(2, ranges, D3D12_SHADER_VISIBILITY_ALL);
-
-        D3D12_STATIC_SAMPLER_DESC sampler = {};
-        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP; sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP; sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-
-        CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, rootParams, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-        Microsoft::WRL::ComPtr<ID3DBlob> signature, error;
-        D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
-        device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(s_Shared.rootSignature.GetAddressOf()));
-
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.pRootSignature = s_Shared.rootSignature.Get();
-        psoDesc.VS = { reinterpret_cast<BYTE*>(vs->GetBufferPointer()), vs->GetBufferSize() };
-        psoDesc.PS = { reinterpret_cast<BYTE*>(ps->GetBufferPointer()), ps->GetBufferSize() };
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-        psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        psoDesc.SampleDesc.Count = 1;
-        psoDesc.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
-        device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(s_Shared.pso.GetAddressOf()));
-
-        s_Shared.isInitialized = true;
-    }
-
-    // 공유 리소스 연결
-    render.vertexBuffer = s_Shared.vertexBuffer;
-    render.indexBuffer = s_Shared.indexBuffer;
-    render.vertexBufferView = s_Shared.vertexBufferView;
-    render.indexBufferView = s_Shared.indexBufferView;
-    render.indexCount = s_Shared.indexCount;
-    render.rootSignature = s_Shared.rootSignature;
-    render.pso = s_Shared.pso;
+    render.vertexBuffer = mat->data.vertexBuffer;
+    render.indexBuffer = mat->data.indexBuffer;
+    render.vertexBufferView = mat->data.vertexBufferView;
+    render.indexBufferView = mat->data.indexBufferView;
+    render.indexCount = mat->data.indexCount;
+    render.rootSignature = mat->data.rootSignature;
+    render.pso = mat->data.pso;
 
     aabb.min = DirectX::XMFLOAT3(-1, -1, -1);
     aabb.max = DirectX::XMFLOAT3(1, 1, 1);
 
-    SetupPerEntityRenderResources(render, rm, device, s_Shared.texture.Get());
+    SetupPerEntityRenderResources(render, rm, rm->m_pDevice, mat->data.texture.Get());
 
     registry.AddComponent(entity, render);
     registry.AddComponent(entity, aabb);

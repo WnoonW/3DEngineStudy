@@ -23,6 +23,10 @@ struct MaterialData
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
     D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
 
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> texture;
+
     UINT indexCount = 0;
     bool isUI = false;                    // UI인지 Mesh인지 구분
     size_t materialID = 0;
