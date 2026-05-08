@@ -1,8 +1,10 @@
 #include "ResourceManager.h"
 #include <DirectXTex/DirectXTex.h>
 #include <DDSTextureLoader/DDSTextureLoader12.h>
+#include <wrl.h>   // ComPtr 사용을 위해 필수
 
 using namespace DirectX;
+using Microsoft::WRL::ComPtr;
 
 ResourceManager::ResourceManager(ID3D12Device14* device)
 {
@@ -12,7 +14,6 @@ ResourceManager::ResourceManager(ID3D12Device14* device)
 ResourceManager::~ResourceManager()
 {
 }
-
 void ResourceManager::CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, D3D12_VERTEX_BUFFER_VIEW* pOutVertexBufferView, ID3D12Resource** ppOutBuffer, void* pData)
 {
     D3D12_VERTEX_BUFFER_VIEW VertexBufferView = {};
@@ -35,7 +36,7 @@ void ResourceManager::CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, 
     memcpy(pVirtualMemory, pData, VertexBufferSize);
     pUploadBuffer->Unmap(0, nullptr);
 
-    // 간단한 업로드 (ResourceManager 내부에서 처리)
+    // 간단한 업로드 (ResourceManager 내부)
     ComPtr<ID3D12CommandAllocator> cmdAlloc;
     ComPtr<ID3D12GraphicsCommandList> cmdList;
     ComPtr<ID3D12CommandQueue> cmdQueue;
@@ -56,7 +57,6 @@ void ResourceManager::CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, 
     ID3D12CommandList* lists[] = { cmdList.Get() };
     cmdQueue->ExecuteCommandLists(1, lists);
 
-    // 기다리기 (간단한 동기화)
     ComPtr<ID3D12Fence> fence;
     m_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
     cmdQueue->Signal(fence.Get(), 1);
@@ -174,7 +174,6 @@ void ResourceManager::CreateTexture2(byte* pngBytes, size_t pngSize, D3D12_CPU_D
     srvDesc.Texture2D.MostDetailedMip = 0;
     m_pDevice->CreateShaderResourceView(texture, &srvDesc, srvHandle);
 
-    // 임시 CommandQueue 생성 (적절한 방법은 App에서 호출하는 것)
     ComPtr<ID3D12CommandQueue> tempQueue;
     D3D12_COMMAND_QUEUE_DESC qd = {};
     qd.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
