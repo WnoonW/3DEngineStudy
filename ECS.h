@@ -36,6 +36,7 @@ struct RenderComponent {
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
     Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
     Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> texture;
     // -------------------------------------------------------------
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
@@ -48,14 +49,6 @@ struct RenderComponent {
 
     // 상수 버퍼 매핑 주소
     UINT8* pMappedConstantData = nullptr;
-};
-
-struct MeshComponent {
-    Microsoft::WRL::ComPtr<ID3D12Resource> VertexBuffer;
-    Microsoft::WRL::ComPtr<ID3D12Resource> IndexBuffer;
-    UINT VertexCount = 0;
-    UINT IndexCount = 0;
-    // 나중에 MaterialComponent와 연동 예정
 };
 
 // 충돌 및 피킹(Picking)을 위한 바운딩 박스

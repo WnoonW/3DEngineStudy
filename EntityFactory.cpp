@@ -311,8 +311,8 @@ Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry
         };
         s_Shared.indexCount = _countof(Indices);
 
-        rm->CreateVertexBuffer(sizeof(Vertex), _countof(Vertices), &s_Shared.vertexBufferView, s_Shared.vertexBuffer.GetAddressOf(), Vertices);
-        rm->CreateIndexBuffer(_countof(Indices), &s_Shared.indexBufferView, s_Shared.indexBuffer.GetAddressOf(), Indices);
+        //rm->CreateVertexBuffer(sizeof(Vertex), _countof(Vertices), &s_Shared.vertexBufferView, s_Shared.vertexBuffer.GetAddressOf(), Vertices);
+        //rm->CreateIndexBuffer(_countof(Indices), &s_Shared.indexBufferView, s_Shared.indexBuffer.GetAddressOf(), Indices);
 
         D3D12_RESOURCE_DESC desc = {};
         rm->CreateTexture3(s_Shared.texture.GetAddressOf(), &desc, L"assets/textures/girl.dds");

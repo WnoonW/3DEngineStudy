@@ -48,20 +48,20 @@ float4 PS(VertexOut pin) : SV_Target
         return float4(1.0, 0.0, 1.0, 1.0); // 마젠타 = 텍스처 실패 신호
     
   
-    //if (Selected)
-    //{
-    //   return tex * float4(1.5, 1.5, 1.5, 1.0);
-    //}
-    
-    
-    //return tex * float4(1.2, 1.0, 0.9, 1.0);
-    
-    
     if (Selected)
     {
-       return float4(1.5, 1.5, 1.5, 1.0);
+       return tex * float4(1.5, 1.5, 1.5, 1.0);
     }
-    return float4(1.2, 1.0, 0.9, 1.0);
+    
+    
+    return tex * float4(1.2, 1.0, 0.9, 1.0);
+    
+    
+    //if (Selected)
+    //{
+    //   return float4(1.5, 1.5, 1.5, 1.0);
+    //}
+    //return float4(1.2, 1.0, 0.9, 1.0);
 }
 
 
