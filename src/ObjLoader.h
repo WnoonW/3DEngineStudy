@@ -12,7 +12,6 @@ struct Vertex {
     DirectX::XMFLOAT2 TexCoord;
 };
 
-// MTL 지원을 위한 SubMesh
 struct SubMesh {
     std::vector<Vertex> vertices;
     std::vector<WORD> indices;
@@ -21,12 +20,10 @@ struct SubMesh {
 
 class ObjLoader {
 public:
-    // 기존 API (backward compatibility)
     static bool Load(const std::string& filename, 
                      std::vector<Vertex>& outVertices, 
                      std::vector<WORD>& outIndices);
 
-    // ★ 새 API: MTL + usemtl 지원 (추천)
     static bool LoadWithMaterials(const std::string& filename, 
                                   std::vector<SubMesh>& outSubMeshes);
 

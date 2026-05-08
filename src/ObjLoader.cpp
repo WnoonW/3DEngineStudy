@@ -30,7 +30,6 @@ bool ObjLoader::Load(const std::string& filename,
     std::vector<SubMesh> subMeshes;
     if (!LoadWithMaterials(filename, subMeshes)) return false;
 
-    // 기존 API 호환: 모든 SubMesh 합치기
     outVertices.clear();
     outIndices.clear();
     WORD baseIndex = 0;
@@ -64,7 +63,7 @@ bool ObjLoader::LoadWithMaterials(const std::string& filename,
     std::string mtlLibPath;
 
     SubMesh* currentSubMesh = nullptr;
-    std::unordered_map<VertexKey, WORD> vertexMap;  // 현재 SubMesh 전용
+    std::unordered_map<VertexKey, WORD> vertexMap;
 
     std::string line;
     while (std::getline(file, line)) {
@@ -90,9 +89,7 @@ bool ObjLoader::LoadWithMaterials(const std::string& filename,
         else if (type == "mtllib") {
             std::string mtlFile;
             iss >> mtlFile;
-            mtlLibPath = mtlFile;
 
-            // mtllib 경로를 OBJ와 동일 디렉토리로 가정
             size_t lastSlash = filename.find_last_of("/\\");
             std::string basePath = (lastSlash != std::string::npos) ? filename.substr(0, lastSlash + 1) : "";
             std::wstring fullMtlPath = std::wstring(basePath.begin(), basePath.end()) + std::wstring(mtlFile.begin(), mtlFile.end());
@@ -103,17 +100,14 @@ bool ObjLoader::LoadWithMaterials(const std::string& filename,
             std::string matName;
             iss >> matName;
 
-            // 새로운 SubMesh 시작
             outSubMeshes.emplace_back();
             currentSubMesh = &outSubMeshes.back();
-            vertexMap.clear();  // SubMesh마다 vertexMap 초기화
+            vertexMap.clear();
 
-            // Material 찾기
             auto it = materials.find(matName);
             if (it != materials.end()) {
                 currentSubMesh->material = it->second;
             } else {
-                // 기본 Material
                 currentSubMesh->material.name = matName;
             }
         }

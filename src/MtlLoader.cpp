@@ -4,7 +4,7 @@
 #include <iostream>
 
 bool MtlLoader::Load(const std::wstring& mtlFilePath,
-    std::unordered_map<std::string, MaterialData>& outMaterials)
+                     std::unordered_map<std::string, MaterialData>& outMaterials)
 {
     std::ifstream file(mtlFilePath);
     if (!file.is_open())
@@ -22,14 +22,14 @@ bool MtlLoader::Load(const std::wstring& mtlFilePath,
         ParseLine(line, outMaterials, currentMat);
     }
 
-    std::cout << "[MtlLoader] Loaded " << outMaterials.size() << " materials from "
-        << std::string(mtlFilePath.begin(), mtlFilePath.end()) << std::endl;
+    std::cout << "[MtlLoader] Loaded " << outMaterials.size() << " materials from " 
+              << std::string(mtlFilePath.begin(), mtlFilePath.end()) << std::endl;
     return true;
 }
 
 void MtlLoader::ParseLine(const std::string& line,
-    std::unordered_map<std::string, MaterialData>& materials,
-    MaterialData*& currentMaterial)
+                          std::unordered_map<std::string, MaterialData>& materials,
+                          MaterialData*& currentMaterial)
 {
     std::istringstream iss(line);
     std::string prefix;
@@ -65,9 +65,8 @@ void MtlLoader::ParseLine(const std::string& line,
     else if (prefix == "map_Kd" && currentMaterial)
     {
         std::string tex;
-        std::getline(iss, tex); // 파일명 전체 (공백 포함 가능)
+        std::getline(iss, tex);
         tex = tex.substr(tex.find_first_not_of(" \t"));
         currentMaterial->diffuseMap = std::wstring(tex.begin(), tex.end());
     }
-    // map_Bump, map_normal 등 필요하면 나중에 추가
 }
