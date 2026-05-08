@@ -14,7 +14,7 @@ void EntityFactory::SetupTransformComponent(Registry& registry, Entity entity,
 }
 
 void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, ResourceManager* rm,
-    ID3D12Device14* device, ID3D12Resource* sharedTexture)
+    ID3D12Device14* device, ID3D12Resource* Texture)
 {
     render.descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -40,12 +40,12 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
 
     // SRV (공유 텍스처 사용)
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = sharedTexture->GetDesc().Format;
+    srvDesc.Format = Texture->GetDesc().Format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = sharedTexture->GetDesc().MipLevels;
+    srvDesc.Texture2D.MipLevels = Texture->GetDesc().MipLevels;
     CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 1, render.descriptorSize);
-    device->CreateShaderResourceView(sharedTexture, &srvDesc, srvHandle);
+    device->CreateShaderResourceView(Texture, &srvDesc, srvHandle);
 }
 
 // ====================== CreateCube ======================
@@ -140,7 +140,7 @@ Entity EntityFactory::CreateMesh(const std::string& filename, Registry& registry
     aabb.min = DirectX::XMFLOAT3(-1, -1, -1);  // 필요하면 ObjLoader에서 min/max 계산하도록 확장 가능
     aabb.max = DirectX::XMFLOAT3(1, 1, 1);
 
-    SetupPerEntityRenderResources(render, rm, device, render.texture.Get());
+    SetupPerEntityRenderResources(render, rm, device, mat->data.texture.Get());
 
     registry.AddComponent(entity, render);
     registry.AddComponent(entity, aabb);

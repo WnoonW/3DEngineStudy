@@ -34,7 +34,7 @@ private:
         DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale);
 
     static void SetupPerEntityRenderResources(RenderComponent& render, ResourceManager* rm,
-        ID3D12Device14* device, ID3D12Resource* sharedTexture);
+        ID3D12Device14* device, ID3D12Resource* Texture);
 };
 
 
