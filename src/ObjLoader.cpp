@@ -8,20 +8,6 @@
 #include <algorithm>
 #include <iostream>
 
-struct VertexKey {
-    int posIdx, texIdx, norIdx;
-    bool operator==(const VertexKey& other) const {
-        return posIdx == other.posIdx && texIdx == other.texIdx && norIdx == other.norIdx;
-    }
-};
-
-namespace std {
-    template<> struct hash<VertexKey> {
-        size_t operator()(const VertexKey& k) const {
-            return ((size_t)k.posIdx << 32) ^ (k.texIdx << 16) ^ k.norIdx;
-        }
-    };
-}
 
 bool ObjLoader::Load(const std::string& filename, 
                      std::vector<Vertex>& outVertices, 
