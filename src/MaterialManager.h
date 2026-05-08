@@ -16,7 +16,7 @@ public:
     Material* GetUIMaterial(ResourceManager* rm);
 
     // Mesh용 Material (OBJ용, color_v2.hlsl 기반)
-    Material* GetMeshMaterial(ResourceManager* rm);
+    Material* GetMeshMaterial(ResourceManager* rm, const std::string& filename);
 
 private:
     MaterialManager() = default;
