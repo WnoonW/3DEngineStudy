@@ -177,20 +177,20 @@ Material* MaterialManager::GetUIMaterial(ResourceManager* rm)
 Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::string& filename)
 {
     // 1. OBJ 파일 파싱
-    MeshData meshData;
-    if (!ObjLoader::Load(filename, meshData.vertices, meshData.indices))
+	std::vector<SubMesh> meshData;
+    if (!ObjLoader::LoadWithMaterials(filename, meshData))
     {
         OutputDebugStringA("OBJ Load Failed! Falling back to Cube.\n");
+        return nullptr;
     }
 
     // 2. Vertex / Index Buffer 생성 (매번 새로 생성)
-    rm->CreateVertexBuffer(sizeof(Vertex), (DWORD)meshData.vertices.size(),
-        &mMeshMaterial.data.vertexBufferView, mMeshMaterial.data.vertexBuffer.GetAddressOf(), meshData.vertices.data());
+    rm->CreateVertexBuffer(sizeof(Vertex), (DWORD)meshData[0].vertices.size(),
+        &mMeshMaterial.data.vertexBufferView, mMeshMaterial.data.vertexBuffer.GetAddressOf(), meshData[0].vertices.data());
 
-    rm->CreateIndexBuffer((DWORD)meshData.indices.size(), &mMeshMaterial.data.indexBufferView,
-        mMeshMaterial.data.indexBuffer.GetAddressOf(), meshData.indices.data());
-
-    mMeshMaterial.data.indexCount = (UINT)meshData.indices.size();
+    rm->CreateIndexBuffer((DWORD)meshData[0].indices.size(), &mMeshMaterial.data.indexBufferView,
+        mMeshMaterial.data.indexBuffer.GetAddressOf(), meshData[0].indices.data());
+    mMeshMaterial.data.indexCount = (UINT)meshData[0].indices.size();
 
     if (!mMeshInitialized) {
         
