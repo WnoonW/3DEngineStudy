@@ -15,8 +15,6 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, D3D12_VERTEX_BUFFER_VIEW* pOutVertexBufferView, ID3D12Resource** ppOutBuffer, void* pData)
 {
-    // 중복 로직 제거 - App에서 처리하는 것이 더 안전함
-    // 단순화된 버전으로 유지
     D3D12_VERTEX_BUFFER_VIEW VertexBufferView = {};
     ID3D12Resource* pVertexBuffer = nullptr;
     ID3D12Resource* pUploadBuffer = nullptr;
@@ -37,8 +35,39 @@ void ResourceManager::CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, 
     memcpy(pVirtualMemory, pData, VertexBufferSize);
     pUploadBuffer->Unmap(0, nullptr);
 
-    // 실제 사용에서는 App의 CommandList로 이동 하는 것이 좋음
-    // 현재는 단순 생성만 유지
+    // 간단한 업로드 (ResourceManager 내부에서 처리)
+    ComPtr<ID3D12CommandAllocator> cmdAlloc;
+    ComPtr<ID3D12GraphicsCommandList> cmdList;
+    ComPtr<ID3D12CommandQueue> cmdQueue;
+
+    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue));
+    m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
+    m_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&cmdList));
+
+    auto barr = CD3DX12_RESOURCE_BARRIER::Transition(pVertexBuffer, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+    cmdList->ResourceBarrier(1, &barr);
+    cmdList->CopyBufferRegion(pVertexBuffer, 0, pUploadBuffer, 0, VertexBufferSize);
+    barr = CD3DX12_RESOURCE_BARRIER::Transition(pVertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    cmdList->ResourceBarrier(1, &barr);
+
+    cmdList->Close();
+    ID3D12CommandList* lists[] = { cmdList.Get() };
+    cmdQueue->ExecuteCommandLists(1, lists);
+
+    // 기다리기 (간단한 동기화)
+    ComPtr<ID3D12Fence> fence;
+    m_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+    cmdQueue->Signal(fence.Get(), 1);
+    if (fence->GetCompletedValue() < 1)
+    {
+        HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence->SetEventOnCompletion(1, event);
+        WaitForSingleObject(event, INFINITE);
+        CloseHandle(event);
+    }
+
     VertexBufferView.BufferLocation = pVertexBuffer->GetGPUVirtualAddress();
     VertexBufferView.StrideInBytes = SizePerVertex;
     VertexBufferView.SizeInBytes = VertexBufferSize;
@@ -55,8 +84,7 @@ void ResourceManager::CreateIndexBuffer(DWORD dwIndexNum, D3D12_INDEX_BUFFER_VIE
     ID3D12Resource* pIndexBuffer = nullptr;
     ID3D12Resource* pUploadBuffer = nullptr;
     UINT IndexBufferSize = sizeof(WORD) * dwIndexNum;
-    CD3DX12_RESOURCE_DESC IndexDesc = CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize
-);
+    CD3DX12_RESOURCE_DESC IndexDesc = CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize);
 
     CD3DX12_HEAP_PROPERTIES defaultHeap(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
@@ -71,6 +99,37 @@ void ResourceManager::CreateIndexBuffer(DWORD dwIndexNum, D3D12_INDEX_BUFFER_VIE
     pUploadBuffer->Map(0, &readRange, (void**)&pVirtualMemory);
     memcpy(pVirtualMemory, pData, IndexBufferSize);
     pUploadBuffer->Unmap(0, nullptr);
+
+    ComPtr<ID3D12CommandAllocator> cmdAlloc;
+    ComPtr<ID3D12GraphicsCommandList> cmdList;
+    ComPtr<ID3D12CommandQueue> cmdQueue;
+
+    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue));
+    m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
+    m_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&cmdList));
+
+    auto barr = CD3DX12_RESOURCE_BARRIER::Transition(pIndexBuffer, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+    cmdList->ResourceBarrier(1, &barr);
+    cmdList->CopyBufferRegion(pIndexBuffer, 0, pUploadBuffer, 0, IndexBufferSize);
+    barr = CD3DX12_RESOURCE_BARRIER::Transition(pIndexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    cmdList->ResourceBarrier(1, &barr);
+
+    cmdList->Close();
+    ID3D12CommandList* lists[] = { cmdList.Get() };
+    cmdQueue->ExecuteCommandLists(1, lists);
+
+    ComPtr<ID3D12Fence> fence;
+    m_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+    cmdQueue->Signal(fence.Get(), 1);
+    if (fence->GetCompletedValue() < 1)
+    {
+        HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence->SetEventOnCompletion(1, event);
+        WaitForSingleObject(event, INFINITE);
+        CloseHandle(event);
+    }
 
     IndexBufferView.BufferLocation = pIndexBuffer->GetGPUVirtualAddress();
     IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
@@ -115,7 +174,12 @@ void ResourceManager::CreateTexture2(byte* pngBytes, size_t pngSize, D3D12_CPU_D
     srvDesc.Texture2D.MostDetailedMip = 0;
     m_pDevice->CreateShaderResourceView(texture, &srvDesc, srvHandle);
 
-    uploadBatch.End(nullptr); // App의 CommandQueue로 이동
+    // 임시 CommandQueue 생성 (적절한 방법은 App에서 호출하는 것)
+    ComPtr<ID3D12CommandQueue> tempQueue;
+    D3D12_COMMAND_QUEUE_DESC qd = {};
+    qd.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    m_pDevice->CreateCommandQueue(&qd, IID_PPV_ARGS(&tempQueue));
+    uploadBatch.End(tempQueue.Get());
 
     *ppOutTexture = texture;
 }
