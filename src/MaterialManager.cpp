@@ -176,46 +176,57 @@ Material* MaterialManager::GetUIMaterial(ResourceManager* rm)
 
 Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::wstring& filename)
 {
-    // 1. OBJ 파일 파싱
-	std::vector<SubMesh> meshData;
+    std::vector<SubMesh> meshData;
     if (!ObjLoader::LoadWithMaterials(filename + L".obj", meshData, filename + L".mtl"))
     {
-        OutputDebugStringA("OBJ Load Failed! Falling back to Cube.\n");
+        OutputDebugStringA("OBJ Load Failed!\n");
         return nullptr;
     }
 
-    // 2. Vertex / Index Buffer 생성 (매번 새로 생성)
-    rm->CreateVertexBuffer(sizeof(Vertex), (DWORD)meshData[0].vertices.size(),
-        &mMeshMaterial.data.vertexBufferView, mMeshMaterial.data.vertexBuffer.GetAddressOf(), meshData[0].vertices.data());
-
-    rm->CreateIndexBuffer((DWORD)meshData[0].indices.size(), &mMeshMaterial.data.indexBufferView,
-        mMeshMaterial.data.indexBuffer.GetAddressOf(), meshData[0].indices.data());
-    mMeshMaterial.data.indexCount = (UINT)meshData[0].indices.size();
-
-    // 3. Texture 로드 (MTL의 map_Kd 경로 사용)
-    if (!meshData.empty() && !meshData[0].material.diffuseMap.empty())
+    if (meshData.empty())
     {
-        // MTL에서 읽은 diffuseMap 경로로 texture 생성
-        D3D12_RESOURCE_DESC texDesc = {};
-        rm->CreateTexture3(
-            mMeshMaterial.data.texture.GetAddressOf(),
-            &texDesc,
-            meshData[0].material.diffuseMap.c_str()   // ← 여기!
-        );
-    }
-    else
-    {
-        // fallback (기존에 쓰던 기본 텍스처)
-        D3D12_RESOURCE_DESC texDesc = {};
-        rm->CreateTexture3(
-            mMeshMaterial.data.texture.GetAddressOf(),
-            &texDesc,
-            L"assets/textures/girl.dds"   // 또는 원하는 기본 텍스처 경로
-        );
+        OutputDebugStringA("meshData is empty!\n");
+        return nullptr;
     }
 
-    if (!mMeshInitialized) {
-        
+    // ★★★★★ 모든 SubMesh를 하나로 합치기 ★★★★★
+    std::vector<Vertex> allVertices;
+    std::vector<WORD>   allIndices;
+    WORD baseIndex = 0;
+
+    for (const auto& sub : meshData)
+    {
+        allVertices.insert(allVertices.end(), sub.vertices.begin(), sub.vertices.end());
+
+        for (WORD idx : sub.indices)
+        {
+            allIndices.push_back(baseIndex + idx);
+        }
+        baseIndex += (WORD)sub.vertices.size();
+    }
+
+    if (allVertices.empty() || allIndices.empty())
+    {
+        OutputDebugStringA("No geometry after merging SubMeshes!\n");
+        return nullptr;
+    }
+
+    // 이제 합쳐진 데이터로 버퍼 생성
+    rm->CreateVertexBuffer(sizeof(Vertex), (DWORD)allVertices.size(),
+        &mMeshMaterial.data.vertexBufferView, mMeshMaterial.data.vertexBuffer.GetAddressOf(), allVertices.data());
+
+    rm->CreateIndexBuffer((DWORD)allIndices.size(), &mMeshMaterial.data.indexBufferView,
+        mMeshMaterial.data.indexBuffer.GetAddressOf(), allIndices.data());
+
+    mMeshMaterial.data.indexCount = (UINT)allIndices.size();
+
+    // 텍스처 (일단 임시로 girl.dds 사용 중)
+    D3D12_RESOURCE_DESC texDesc = {};
+    rm->CreateTexture3(mMeshMaterial.data.texture.GetAddressOf(), &texDesc, L"assets/textures/girl.dds");
+
+    // PSO / RootSignature 생성 (기존 코드 그대로)
+    if (!mMeshInitialized)
+    {
         ID3D12Device14* device = rm->m_pDevice;
 
         auto vs = AppUtill::CompileShader(L"Shaders\\color_v2.hlsl", nullptr, "VS", "vs_5_0");
@@ -226,7 +237,6 @@ Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::wstri
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
-        // RootSignature + PSO 생성 (Cube와 동일 코드 그대로 복사)
         CD3DX12_DESCRIPTOR_RANGE ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -263,5 +273,6 @@ Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::wstri
 
         mMeshInitialized = true;
     }
+
     return &mMeshMaterial;
 }

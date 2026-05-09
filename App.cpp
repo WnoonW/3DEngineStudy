@@ -305,6 +305,8 @@ void App::CreateSwapChain()
     swapChainDesc.BufferCount = SwapChainBufferCount;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.SampleDesc.Quality = 0;
     ThrowIfFailed(mdxgiFactory->CreateSwapChainForHwnd(mCommandQueue.Get(), mhMainWnd, &swapChainDesc, NULL, NULL, mSwapChain.GetAddressOf()));
 }
 
@@ -350,6 +352,8 @@ void App::OnResize()
     depthStencilDesc.MipLevels = 1;
     depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
     depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
 
     D3D12_CLEAR_VALUE optClear = {};
     optClear.Format = mDepthStencilFormat;

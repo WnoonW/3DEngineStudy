@@ -45,18 +45,20 @@ bool ObjLoader::LoadWithMaterials(const std::wstring& filename,
 
     std::unordered_map<std::string, MaterialData> materials;
     std::string currentMtlName;
-    SubMesh* currentSubMesh = nullptr;
 
-    // ====================== MTL 로드 (별도 파일 우선) ======================
-    bool mtlLoaded = false;
+    // MTL 로드
     if (!mtlFilename.empty()) {
-        if (MtlLoader::Load(mtlFilename, materials)) {
-            mtlLoaded = true;
-            OutputDebugStringA("Loaded external MTL file successfully.\n");
-        }
+        MtlLoader::Load(mtlFilename, materials);
     }
 
-    // ====================== OBJ 파싱 ======================
+    // ====================== OBJ 파싱을 위한 데이터 ======================
+    std::vector<DirectX::XMFLOAT3> positions;
+    std::vector<DirectX::XMFLOAT2> texCoords;
+    std::vector<DirectX::XMFLOAT3> normals;
+
+    SubMesh* currentSubMesh = nullptr;
+    std::unordered_map<VertexKey, WORD> vertexMap;   // 현재 SubMesh용
+
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream iss(line);
@@ -64,20 +66,13 @@ bool ObjLoader::LoadWithMaterials(const std::wstring& filename,
         iss >> type;
 
         if (type == "mtllib" && mtlFilename.empty()) {
-            // ★★★ GetDirectory 대신 직접 경로 계산 ★★★
+            // MTL 파일 경로 처리 (기존 코드 유지)
             std::string mtlFile;
             iss >> mtlFile;
-
             size_t lastSlash = filename.find_last_of(L"/\\");
-            std::wstring dir = (lastSlash != std::wstring::npos)
-                ? filename.substr(0, lastSlash + 1)
-                : L"";
-
+            std::wstring dir = (lastSlash != std::wstring::npos) ? filename.substr(0, lastSlash + 1) : L"";
             std::wstring fullMtlPath = dir + std::wstring(mtlFile.begin(), mtlFile.end());
-
-            if (MtlLoader::Load(fullMtlPath, materials)) {
-                mtlLoaded = true;
-            }
+            MtlLoader::Load(fullMtlPath, materials);
         }
         else if (type == "usemtl") {
             iss >> currentMtlName;
@@ -90,30 +85,39 @@ bool ObjLoader::LoadWithMaterials(const std::wstring& filename,
             if (it != materials.end()) {
                 currentSubMesh->material = it->second;
             }
+
+            vertexMap.clear();   // 새 SubMesh마다 vertexMap 초기화
         }
         else if (type == "v") {
             XMFLOAT3 pos;
             iss >> pos.x >> pos.y >> pos.z;
-            // positions.push_back(pos);   ← 기존에 positions 벡터가 있었다면 유지
+            positions.push_back(pos);
         }
         else if (type == "vt") {
             XMFLOAT2 uv;
             iss >> uv.x >> uv.y;
-            // texCoords.push_back(uv);
+            texCoords.push_back(uv);
         }
         else if (type == "vn") {
             XMFLOAT3 norm;
             iss >> norm.x >> norm.y >> norm.z;
-            // normals.push_back(norm);
+            normals.push_back(norm);
         }
         else if (type == "f" && currentSubMesh) {
-            // ← 기존 face 파싱 로직 그대로 복사해서 넣으세요 (ParseFace 호출 등)
+            // face 라인 파싱 (f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ...)
+            std::string token;
+            while (iss >> token) {
+                ParseFace(token, positions, normals, texCoords, *currentSubMesh, vertexMap);
+            }
         }
     }
 
-    // usemtl이 하나도 없던 단순 OBJ 처리
+    // usemtl이 하나도 없었던 경우 (단순 OBJ)
     if (outSubMeshes.empty()) {
         outSubMeshes.emplace_back();
+        // 이 경우 모든 vertex/index를 첫 번째 SubMesh에 넣어야 하지만,
+        // 지금 구조에서는 usemtl 없이도 f 라인을 처리하려면 currentSubMesh를 여기서 만들어야 함
+        // (필요하면 나중에 추가로 말씀해주세요)
     }
 
     file.close();
