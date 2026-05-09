@@ -44,8 +44,7 @@ struct RenderComponent {
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CBVdescHeap;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> SRVdescHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeap;
     UINT descriptorSize = 0;
 
     // 상수 버퍼 매핑 주소
