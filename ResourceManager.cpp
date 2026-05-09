@@ -189,10 +189,16 @@ BOOL ResourceManager::CreateTexture3(ID3D12Resource** ppOutResource, D3D12_RESOU
     std::unique_ptr<uint8_t[]> ddsData;
     std::vector<D3D12_SUBRESOURCE_DATA> subresourceData;
 
-    LoadDDSTextureFromFile(m_pDevice, wchFileName, &pTexResource, ddsData, subresourceData);
+    HRESULT hr = LoadDDSTextureFromFile(m_pDevice, wchFileName, &pTexResource, ddsData, subresourceData);
+
+    if (FAILED(hr) || pTexResource == nullptr) {
+        OutputDebugStringA("!!! TEXTURE LOAD FAILED !!!\n");
+        OutputDebugStringW((std::wstring(L"File: ") + wchFileName + L"\n").c_str());
+        *ppOutResource = nullptr;
+        return false;
+    }
 
     *ppOutResource = pTexResource;
     *pOutDesc = pTexResource->GetDesc();
-
     return true;
 }

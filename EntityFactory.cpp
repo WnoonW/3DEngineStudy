@@ -14,7 +14,7 @@ void EntityFactory::SetupTransformComponent(Registry& registry, Entity entity,
 }
 
 void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, ResourceManager* rm,
-    ID3D12Device14* device, ID3D12Resource* Texture)
+    ID3D12Device14* device)
 {
     render.descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -36,12 +36,12 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
     device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = Texture->GetDesc().Format;
+    srvDesc.Format = render.texture->GetDesc().Format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = Texture->GetDesc().MipLevels;
+    srvDesc.Texture2D.MipLevels = render.texture->GetDesc().MipLevels;
     CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 1, render.descriptorSize);
-    device->CreateShaderResourceView(Texture, &srvDesc, srvHandle);
+    device->CreateShaderResourceView(render.texture.Get(), &srvDesc, srvHandle);
 }
 
 Entity EntityFactory::CreateCube(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale)
@@ -60,13 +60,14 @@ Entity EntityFactory::CreateCube(Registry& registry, ResourceManager* rm, Direct
     render.vertexBufferView = mat->data.vertexBufferView;
     render.indexBufferView = mat->data.indexBufferView;
     render.indexCount = mat->data.indexCount;
+    render.texture = mat->data.texture;
     render.rootSignature = mat->data.rootSignature;
     render.pso = mat->data.pso;
 
     aabb.min = DirectX::XMFLOAT3(-1, -1, -1);
     aabb.max = DirectX::XMFLOAT3(1, 1, 1);
 
-    SetupPerEntityRenderResources(render, rm, rm->m_pDevice, mat->data.texture.Get());
+    SetupPerEntityRenderResources(render, rm, rm->m_pDevice);
 
     registry.AddComponent(entity, render);
     registry.AddComponent(entity, aabb);
@@ -92,13 +93,14 @@ Entity EntityFactory::CreateUI(Registry& registry, ResourceManager* rm, DirectX:
     render.vertexBufferView = mat->data.vertexBufferView;
     render.indexBufferView = mat->data.indexBufferView;
     render.indexCount = mat->data.indexCount;
+    render.texture = mat->data.texture;
     render.rootSignature = mat->data.rootSignature;
     render.pso = mat->data.pso;
 
     aabb.min = DirectX::XMFLOAT3(-1, -1, 0);
     aabb.max = DirectX::XMFLOAT3(1, 1, 0);
 
-    SetupPerEntityRenderResources(render, rm, device, mat->data.texture.Get());
+    SetupPerEntityRenderResources(render, rm, device);
 
     registry.AddComponent(entity, render);
     registry.AddComponent(entity, aabb);
@@ -125,13 +127,14 @@ Entity EntityFactory::CreateMesh(const std::wstring& filename, Registry& registr
     render.vertexBufferView = mat->data.vertexBufferView;
     render.indexBufferView = mat->data.indexBufferView;
     render.indexCount = mat->data.indexCount;
+	render.texture = mat->data.texture;
     render.rootSignature = mat->data.rootSignature;
     render.pso = mat->data.pso;
 
     aabb.min = DirectX::XMFLOAT3(-1, -1, -1);
     aabb.max = DirectX::XMFLOAT3(1, 1, 1);
 
-    SetupPerEntityRenderResources(render, rm, device, mat->data.texture.Get());
+    SetupPerEntityRenderResources(render, rm, device);
 
     registry.AddComponent(entity, render);
     registry.AddComponent(entity, aabb);
