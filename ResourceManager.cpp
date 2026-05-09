@@ -1,6 +1,6 @@
 #include "ResourceManager.h"
-#include <DirectXTex/DirectXTex.h>
-#include <DDSTextureLoader/DDSTextureLoader12.h>
+#include "../DirectXTex/DirectXTex/DirectXTex.h"
+#include "../DirectXTex/DDSTextureLoader/DDSTextureLoader12.h"
 #include <wrl.h>   // ComPtr 사용을 위해 필수
 
 using namespace DirectX;

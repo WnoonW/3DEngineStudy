@@ -42,6 +42,7 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
     srvDesc.Texture2D.MipLevels = render.texture->GetDesc().MipLevels;
     CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 1, render.descriptorSize);
     device->CreateShaderResourceView(render.texture.Get(), &srvDesc, srvHandle);
+
 }
 
 Entity EntityFactory::CreateCube(Registry& registry, ResourceManager* rm, DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 scale)
