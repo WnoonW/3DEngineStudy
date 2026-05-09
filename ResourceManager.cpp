@@ -1,6 +1,6 @@
 #include "ResourceManager.h"
-#include <DirectXTex\DirectXTex.h>
-#include <DDSTextureLoader/DDSTextureLoader12.h>
+#include "../DirectXTex/DirectXTex/DirectXTex.h"
+#include "../DirectXTex/DDSTextureLoader/DDSTextureLoader12.h"
 
 using namespace DirectX;
 

@@ -210,7 +210,7 @@ void Object::BuildSRV()
 
 	ID3D12Resource* pTexResource = nullptr;
 	D3D12_RESOURCE_DESC desc = {};
-	m_pResourceManager->CreateTexture3(&pTexResource, &desc, L"assets/textures/girl.dds");
+	m_pResourceManager->CreateTexture3(&pTexResource, &desc, L"../3DEngineStudy/assets/textures/girl.dds");
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
 	SRVDesc.Format = desc.Format;
