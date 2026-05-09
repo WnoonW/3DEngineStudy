@@ -227,8 +227,8 @@ void Object::BuildShader()
 {
 	if (isUI)
 	{
-		mvsByteCode = AppUtill::CompileShader(L"Shaders\\UI.hlsl", nullptr, "VS", "vs_5_0");
-		mpsByteCode = AppUtill::CompileShader(L"Shaders\\UI.hlsl", nullptr, "PS", "ps_5_0");
+		mvsByteCode = AppUtill::CompileShader(L"../3DEngineStudy/Shaders\\UI.hlsl", nullptr, "VS", "vs_5_0");
+		mpsByteCode = AppUtill::CompileShader(L"../3DEngineStudy/Shaders\\UI.hlsl", nullptr, "PS", "ps_5_0");
 
 		mInputLayout =
 		{
@@ -239,8 +239,8 @@ void Object::BuildShader()
 	}
 	else 
 	{
-		mvsByteCode = AppUtill::CompileShader(L"Shaders\\color_v2.hlsl", nullptr, "VS", "vs_5_0");
-		mpsByteCode = AppUtill::CompileShader(L"Shaders\\color_v2.hlsl", nullptr, "PS", "ps_5_0");
+		mvsByteCode = AppUtill::CompileShader(L"../3DEngineStudy/Shaders\\color_v2.hlsl", nullptr, "VS", "vs_5_0");
+		mpsByteCode = AppUtill::CompileShader(L"../3DEngineStudy/Shaders\\color_v2.hlsl", nullptr, "PS", "ps_5_0");
 
 		mInputLayout =
 		{
