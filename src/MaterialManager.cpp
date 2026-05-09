@@ -53,8 +53,9 @@ Material* MaterialManager::GetCubeMaterial(ResourceManager* rm)
         CD3DX12_DESCRIPTOR_RANGE ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        CD3DX12_ROOT_PARAMETER rootParams[1];
-        rootParams[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);
+        CD3DX12_ROOT_PARAMETER rootParams[2];
+        rootParams[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParams[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
 
         D3D12_STATIC_SAMPLER_DESC sampler = {};
         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -124,8 +125,9 @@ Material* MaterialManager::GetUIMaterial(ResourceManager* rm)
         CD3DX12_DESCRIPTOR_RANGE ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        CD3DX12_ROOT_PARAMETER rootParams[1];
-        rootParams[0].InitAsDescriptorTable(2, ranges, D3D12_SHADER_VISIBILITY_ALL);
+        CD3DX12_ROOT_PARAMETER rootParams[2];
+        rootParams[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParams[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
 
         D3D12_STATIC_SAMPLER_DESC sampler = {};
         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -240,8 +242,9 @@ Material* MaterialManager::GetMeshMaterial(ResourceManager* rm, const std::wstri
         CD3DX12_DESCRIPTOR_RANGE ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        CD3DX12_ROOT_PARAMETER rootParams[1];
-        rootParams[0].InitAsDescriptorTable(2, ranges, D3D12_SHADER_VISIBILITY_ALL);
+        CD3DX12_ROOT_PARAMETER rootParams[2];
+        rootParams[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParams[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
 
         D3D12_STATIC_SAMPLER_DESC sampler = {};
         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;

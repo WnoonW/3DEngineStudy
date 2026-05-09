@@ -84,11 +84,13 @@ private:
         commandList->IASetIndexBuffer(&render.indexBufferView);
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-        ID3D12DescriptorHeap* pHeaps[] = { render.descHeap.Get() };
+        ID3D12DescriptorHeap* pHeaps[] = { render.CBVdescHeap.Get(), render.SRVdescHeap.Get() };
         commandList->SetDescriptorHeaps(_countof(pHeaps), pHeaps);
 
-        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvGpuHandle(render.descHeap->GetGPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvGpuHandle(render.CBVdescHeap->GetGPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle(render.SRVdescHeap->GetGPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
         commandList->SetGraphicsRootDescriptorTable(0, cbvGpuHandle);
+        commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
 
         commandList->DrawIndexedInstanced(render.indexCount, 1, 0, 0, 0);
     }

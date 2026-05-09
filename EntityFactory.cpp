@@ -18,11 +18,17 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
 {
     render.descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-    heapDesc.NumDescriptors = 2;
-    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(render.descHeap.GetAddressOf()));
+    D3D12_DESCRIPTOR_HEAP_DESC cbvheapDesc = {};
+    cbvheapDesc.NumDescriptors = 1;
+    cbvheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    cbvheapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    device->CreateDescriptorHeap(&cbvheapDesc, IID_PPV_ARGS(render.CBVdescHeap.GetAddressOf()));
+
+    D3D12_DESCRIPTOR_HEAP_DESC srvheapDesc = {};
+    srvheapDesc.NumDescriptors = 1;
+    srvheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvheapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    device->CreateDescriptorHeap(&srvheapDesc, IID_PPV_ARGS(render.SRVdescHeap.GetAddressOf()));
 
     UINT elementByteSize = (sizeof(ObjectConstants) + 255) & ~255;
     rm->CreateConstantBuffer(elementByteSize, 1, render.constantBuffer.GetAddressOf());
@@ -32,7 +38,7 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
     cbvDesc.BufferLocation = render.constantBuffer->GetGPUVirtualAddress();
     cbvDesc.SizeInBytes = elementByteSize;
-    CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(render.CBVdescHeap->GetCPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
     device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -40,7 +46,7 @@ void EntityFactory::SetupPerEntityRenderResources(RenderComponent& render, Resou
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = render.texture->GetDesc().MipLevels;
-    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(render.descHeap->GetCPUDescriptorHandleForHeapStart(), 1, render.descriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(render.SRVdescHeap->GetCPUDescriptorHandleForHeapStart(), 0, render.descriptorSize);
     device->CreateShaderResourceView(render.texture.Get(), &srvDesc, srvHandle);
 
 }
